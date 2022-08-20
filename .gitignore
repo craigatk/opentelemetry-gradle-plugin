@@ -10,7 +10,7 @@
 .classpath
 .project
 .settings
-build
+/build
 out
 target
 

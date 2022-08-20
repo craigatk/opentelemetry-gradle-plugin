@@ -7,12 +7,21 @@ plugins {
 gradlePlugin {
     plugins {
         opentelemetryPlugin {
-            id = 'com.atkinsondev.opentelemetry'
-            implementationClass = 'com.atkinsondev.opentelemetry.OpenTelemetryPlugin'
+            id = 'com.atkinsondev.opentelemetry-build'
+            implementationClass = 'com.atkinsondev.opentelemetry.build.OpenTelemetryBuildPlugin'
         }
     }
 }
 
 repositories {
     mavenCentral()
+}
+
+dependencies {
+    implementation("io.opentelemetry:opentelemetry-api:$otelVersion")
+    implementation("io.opentelemetry:opentelemetry-sdk:$otelVersion")
+    implementation("io.opentelemetry:opentelemetry-exporter-otlp:$otelVersion")
+    implementation("io.opentelemetry:opentelemetry-semconv:$otelVersion-alpha")
+
+    testImplementation gradleTestKit()
 }
