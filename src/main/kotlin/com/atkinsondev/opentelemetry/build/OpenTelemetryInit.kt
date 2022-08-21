@@ -1,26 +1,36 @@
 package com.atkinsondev.opentelemetry.build
 
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME
-
 import io.opentelemetry.api.OpenTelemetry
+import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
+import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
-import io.opentelemetry.sdk.resources.Resource
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME
 import java.util.concurrent.TimeUnit
 
 class OpenTelemetryInit {
-    fun init(endpoint: String, headers: Map<String, String>, serviceName: String): OpenTelemetry {
+    fun init(endpoint: String, headers: Map<String, String>, serviceName: String, exporterMode: OpenTelemetryExporterMode): OpenTelemetry {
         val resource: Resource = Resource.getDefault()
             .merge(Resource.builder().put(SERVICE_NAME, serviceName).build())
 
-        val spanExporterBuilder = OtlpGrpcSpanExporter.builder()
-            .setTimeout(2, TimeUnit.SECONDS)
-            .setEndpoint(endpoint)
+        val spanExporter = if (exporterMode == OpenTelemetryExporterMode.GRPC) {
+            val spanExporterBuilder = OtlpGrpcSpanExporter.builder()
+                .setTimeout(2, TimeUnit.SECONDS)
+                .setEndpoint(endpoint)
 
-        if (headers.isNotEmpty()) {
             headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
+
+            spanExporterBuilder.build()
+        } else {
+            val spanExporterBuilder = OtlpHttpSpanExporter.builder()
+                .setTimeout(2, TimeUnit.SECONDS)
+                .setEndpoint(endpoint)
+
+            headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
+
+            spanExporterBuilder.build()
         }
 
         val openTelemetrySdk = OpenTelemetrySdk.builder()
@@ -28,7 +38,7 @@ class OpenTelemetryInit {
                 SdkTracerProvider.builder()
                     .setResource(resource)
                     .addSpanProcessor(
-                        BatchSpanProcessor.builder(spanExporterBuilder.build())
+                        BatchSpanProcessor.builder(spanExporter)
                             .setScheduleDelay(100, TimeUnit.MILLISECONDS)
                             .build()
                     )

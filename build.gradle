@@ -24,4 +24,15 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-semconv:$otelVersion-alpha")
 
     testImplementation gradleTestKit()
+
+    testImplementation(platform("org.junit:junit-bom:5.9.0"))
+    testImplementation("org.junit.jupiter:junit-jupiter")
+
+    testImplementation "com.github.tomakehurst:wiremock-jre8:2.33.2"
+
+    testImplementation("io.strikt:strikt-core:0.34.0")
+}
+
+test {
+    useJUnitPlatform()
 }

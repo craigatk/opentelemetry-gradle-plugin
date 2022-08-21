@@ -10,13 +10,12 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
         project.afterEvaluate {
             val serviceName = "${project.name}-build"
-            val endpoint = "http://localhost:8080"
-            val headers: Map<String, String> = mapOf()
 
             val openTelemetry = OpenTelemetryInit().init(
-                endpoint = endpoint,
-                headers = headers,
+                endpoint = extension.endpoint.get(),
+                headers = extension.headers.get(),
                 serviceName = serviceName,
+                exporterMode = extension.exporterMode.get()
             )
 
             val tracer = openTelemetry.getTracer(serviceName)
