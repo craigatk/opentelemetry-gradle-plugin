@@ -1,6 +1,5 @@
 package com.atkinsondev.opentelemetry.build
 
-import io.opentelemetry.api.OpenTelemetry
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
@@ -11,7 +10,7 @@ import io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_N
 import java.util.concurrent.TimeUnit
 
 class OpenTelemetryInit {
-    fun init(endpoint: String, headers: Map<String, String>, serviceName: String, exporterMode: OpenTelemetryExporterMode): OpenTelemetry {
+    fun init(endpoint: String, headers: Map<String, String>, serviceName: String, exporterMode: OpenTelemetryExporterMode): OpenTelemetrySdk {
         val resource: Resource = Resource.getDefault()
             .merge(Resource.builder().put(SERVICE_NAME, serviceName).build())
 
@@ -45,9 +44,6 @@ class OpenTelemetryInit {
                     .build()
             )
             .buildAndRegisterGlobal()
-
-        Runtime.getRuntime()
-            .addShutdownHook(Thread { openTelemetrySdk.sdkTracerProvider.shutdown() })
 
         return openTelemetrySdk
     }

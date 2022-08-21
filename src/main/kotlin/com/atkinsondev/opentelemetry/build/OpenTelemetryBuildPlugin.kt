@@ -20,11 +20,13 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
             val tracer = openTelemetry.getTracer(serviceName)
 
-            val rootSpan = tracer.spanBuilder("build").startSpan()
+            val rootSpan = tracer.spanBuilder("gradle-build").startSpan()
 
-            val buildListener = OpenTelemetryBuildListener(rootSpan)
-
+            val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
             project.gradle.addBuildListener(buildListener)
+
+            val taskListener = OpenTelemetryTaskListener(tracer)
+            project.gradle.addListener(taskListener)
         }
     }
 }
