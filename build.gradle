@@ -2,6 +2,7 @@ plugins {
     id 'java-gradle-plugin'
     id "org.jetbrains.kotlin.jvm" version "1.7.10"
     id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
+    id "dev.projektor.publish" version "7.7.0"
 }
 
 gradlePlugin {
@@ -41,4 +42,9 @@ test {
 
 ktlint {
     disabledRules = ["no-wildcard-imports"]
+}
+
+projektor {
+    serverUrl = "https://projektorlive.herokuapp.com"
+    publishToken = System.getenv("PROJEKTOR_TOKEN") ?: project.findProperty('projektor_publish_token') ?: null
 }
