@@ -26,6 +26,13 @@ class OpenTelemetryBuildPluginTest {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
         val buildFileContents = """
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                    mavenCentral()
+                }
+            }
+            
             plugins {
                 id "com.atkinsondev.opentelemetry-build"
                 id "org.jetbrains.kotlin.jvm" version "1.7.10"
@@ -106,6 +113,13 @@ class OpenTelemetryBuildPluginTest {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
         val buildFileContents = """
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                    mavenCentral()
+                }
+            }
+            
             plugins {
                 id "com.atkinsondev.opentelemetry-build"
                 id "org.jetbrains.kotlin.jvm" version "1.7.10"
