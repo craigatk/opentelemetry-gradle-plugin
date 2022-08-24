@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
-import strikt.assertions.isGreaterThanOrEqualTo
+import strikt.assertions.isNotEmpty
 import strikt.assertions.isNotNull
 import java.io.File
 import java.nio.file.Path
@@ -89,6 +89,68 @@ class OpenTelemetryBuildPluginTest {
     }
 
     @Test
+    fun `should send data to OpenTelemetry with HTTP and headers`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents = """
+            buildscript {
+                repositories {
+                    gradlePluginPortal()
+                    mavenCentral()
+                }
+            }
+            
+            plugins {
+                id "com.atkinsondev.opentelemetry-build"
+                id "org.jetbrains.kotlin.jvm" version "1.7.10"
+            }
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                testImplementation(platform("org.junit:junit-bom:5.9.0"))
+                testImplementation("org.junit.jupiter:junit-jupiter")
+            }
+            
+            test {
+                useJUnitPlatform()
+            }
+            
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+                headers = ["foo1": "bar1", "foo2": "bar2"]
+            }
+        """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult = GradleRunner.create()
+            .withProjectDir(projectRootDirPath.toFile())
+            .withArguments("test", "--info", "--stacktrace")
+            .withPluginClasspath()
+            .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+
+            expectThat(otelRequests).isNotEmpty()
+
+            expectThat(otelRequests[0].header("foo1").firstValue()).isEqualTo("bar1")
+            expectThat(otelRequests[0].header("foo2").firstValue()).isEqualTo("bar2")
+        }
+    }
+
+    @Test
     fun `should send data to OpenTelemetry with GRPC`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
@@ -142,7 +204,7 @@ class OpenTelemetryBuildPluginTest {
         await().untilAsserted {
             val otelRequests = findAll(postRequestedFor(urlEqualTo("/opentelemetry.proto.collector.trace.v1.TraceService/Export")))
 
-            expectThat(otelRequests.size).isGreaterThanOrEqualTo(1)
+            expectThat(otelRequests).isNotEmpty()
         }
     }
 }
