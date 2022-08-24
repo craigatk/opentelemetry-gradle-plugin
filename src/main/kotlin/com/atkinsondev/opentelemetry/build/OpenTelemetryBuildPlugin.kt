@@ -11,7 +11,7 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         project.afterEvaluate {
             val serviceName = "${project.name}-build"
 
-            val openTelemetry = OpenTelemetryInit().init(
+            val openTelemetry = OpenTelemetryInit(project.logger).init(
                 endpoint = extension.endpoint.get(),
                 headers = extension.headers.get(),
                 serviceName = serviceName,

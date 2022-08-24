@@ -7,10 +7,16 @@ import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
 import io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME
+import org.gradle.api.logging.Logger
 import java.util.concurrent.TimeUnit
 
-class OpenTelemetryInit {
-    fun init(endpoint: String, headers: Map<String, String>, serviceName: String, exporterMode: OpenTelemetryExporterMode): OpenTelemetrySdk {
+class OpenTelemetryInit(private val logger: Logger) {
+    fun init(
+        endpoint: String,
+        headers: Map<String, String>,
+        serviceName: String,
+        exporterMode: OpenTelemetryExporterMode
+    ): OpenTelemetrySdk {
         val resource: Resource = Resource.getDefault()
             .merge(Resource.builder().put(SERVICE_NAME, serviceName).build())
 
@@ -32,6 +38,8 @@ class OpenTelemetryInit {
             spanExporterBuilder.build()
         }
 
+        logger.info("Registering OpenTelemetry with mode $exporterMode")
+
         val openTelemetrySdk = OpenTelemetrySdk.builder()
             .setTracerProvider(
                 SdkTracerProvider.builder()
@@ -43,7 +51,7 @@ class OpenTelemetryInit {
                     )
                     .build()
             )
-            .buildAndRegisterGlobal()
+            .build()
 
         return openTelemetrySdk
     }
