@@ -12,8 +12,8 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
             val serviceName = "${project.name}-build"
 
             val openTelemetry = OpenTelemetryInit(project.logger).init(
-                endpoint = extension.endpoint.get(),
-                headers = extension.headers.get(),
+                endpoint = extension.endpoint.orNull ?: throw IllegalArgumentException("OpenTelemetry endpoint is required in OpenTelemetry build plugin"),
+                headers = extension.headers.orNull ?: mapOf(),
                 serviceName = serviceName,
                 exporterMode = extension.exporterMode.get()
             )
@@ -25,7 +25,7 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
             val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
             project.gradle.addBuildListener(buildListener)
 
-            val taskListener = OpenTelemetryTaskListener(tracer)
+            val taskListener = OpenTelemetryTaskListener(tracer, rootSpan)
             project.gradle.addListener(taskListener)
         }
     }
