@@ -6,16 +6,27 @@ import io.opentelemetry.context.Context
 import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.internal.tasks.TaskStateInternal
+import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.TaskState
+import org.gradle.api.tasks.testing.Test
 import java.util.concurrent.ConcurrentHashMap
 
-class OpenTelemetryTaskListener(private val tracer: Tracer, private val rootSpan: Span) : TaskExecutionListener {
+class OpenTelemetryTaskListener(
+    private val tracer: Tracer,
+    private val rootSpan: Span,
+    private val logger: Logger
+) : TaskExecutionListener {
     private val taskSpanMap = ConcurrentHashMap<String, Span>()
 
     override fun beforeExecute(task: Task) {
         val taskKey = taskHashKey(task)
 
         val span = tracer.spanBuilder(taskKey).setParent(Context.current().with(rootSpan)).startSpan()
+
+        if (task is Test) {
+            val testListener = OpenTelemetryTestListener(logger, span)
+            task.addTestListener(testListener)
+        }
 
         taskSpanMap.put(taskKey, span)
     }
@@ -40,6 +51,6 @@ class OpenTelemetryTaskListener(private val tracer: Tracer, private val rootSpan
     }
 
     companion object {
-        fun taskHashKey(task: Task) = task.path
+        fun taskHashKey(task: Task): String = task.path
     }
 }

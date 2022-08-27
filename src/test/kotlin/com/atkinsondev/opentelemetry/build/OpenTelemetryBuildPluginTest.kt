@@ -23,30 +23,7 @@ class OpenTelemetryBuildPluginTest {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
         val buildFileContents = """
-            buildscript {
-                repositories {
-                    gradlePluginPortal()
-                    mavenCentral()
-                }
-            }
-            
-            plugins {
-                id "com.atkinsondev.opentelemetry-build"
-                id "org.jetbrains.kotlin.jvm" version "1.7.10"
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                testImplementation(platform("org.junit:junit-bom:5.9.0"))
-                testImplementation("org.junit.jupiter:junit-jupiter")
-            }
-            
-            test {
-                useJUnitPlatform()
-            }
+            ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
@@ -93,30 +70,7 @@ class OpenTelemetryBuildPluginTest {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
         val buildFileContents = """
-            buildscript {
-                repositories {
-                    gradlePluginPortal()
-                    mavenCentral()
-                }
-            }
-            
-            plugins {
-                id "com.atkinsondev.opentelemetry-build"
-                id "org.jetbrains.kotlin.jvm" version "1.7.10"
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                testImplementation(platform("org.junit:junit-bom:5.9.0"))
-                testImplementation("org.junit.jupiter:junit-jupiter")
-            }
-            
-            test {
-                useJUnitPlatform()
-            }
+            ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
@@ -151,60 +105,40 @@ class OpenTelemetryBuildPluginTest {
     }
 
     @Test
-    fun `should send data to OpenTelemetry with GRPC`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `when test fails should send failure data`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
         val buildFileContents = """
-            buildscript {
-                repositories {
-                    gradlePluginPortal()
-                    mavenCentral()
-                }
-            }
-            
-            plugins {
-                id "com.atkinsondev.opentelemetry-build"
-                id "org.jetbrains.kotlin.jvm" version "1.7.10"
-            }
-            
-            repositories {
-                mavenCentral()
-            }
-            
-            dependencies {
-                testImplementation(platform("org.junit:junit-bom:5.9.0"))
-                testImplementation("org.junit.jupiter:junit-jupiter")
-            }
-            
-            test {
-                useJUnitPlatform()
-            }
+            ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
-                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.GRPC
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
         createSrcDirectoryAndClassFile(projectRootDirPath)
-        createTestDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndFailingClassFile(projectRootDirPath)
 
-        stubFor(post("/opentelemetry.proto.collector.trace.v1.TraceService/Export").willReturn(ok()))
+        stubFor(post("/otel").willReturn(ok()))
 
         val buildResult = GradleRunner.create()
             .withProjectDir(projectRootDirPath.toFile())
             .withArguments("test", "--info", "--stacktrace")
             .withPluginClasspath()
-            .build()
+            .buildAndFail()
 
-        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.FAILED)
 
         await().untilAsserted {
-            val otelRequests = findAll(postRequestedFor(urlEqualTo("/opentelemetry.proto.collector.trace.v1.TraceService/Export")))
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
 
-            expectThat(otelRequests).isNotEmpty()
+            val otelRequestBodies = otelRequests.map { it.bodyAsString }
+
+            val testFailureMessage = "Assertion failed"
+            expectThat(otelRequestBodies.find { it.contains(testFailureMessage) }).isNotNull()
         }
     }
 }
