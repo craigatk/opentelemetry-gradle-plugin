@@ -9,6 +9,8 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         val extension = project.extensions.create("openTelemetryBuild", OpenTelemetryBuildPluginExtension::class.java)
 
         project.afterEvaluate {
+            project.logger.info("Configuring OpenTelemetry build plugin")
+
             val serviceName = "${project.name}-build"
 
             val openTelemetry = OpenTelemetryInit(project.logger).init(
@@ -25,7 +27,7 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
             val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
             project.gradle.addBuildListener(buildListener)
 
-            val taskListener = OpenTelemetryTaskListener(tracer, rootSpan)
+            val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, project.logger)
             project.gradle.addListener(taskListener)
         }
     }
