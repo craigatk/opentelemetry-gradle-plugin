@@ -42,6 +42,7 @@ class OpenTelemetryTaskListener(
             span?.setAttribute("task.outcome", taskState.outcome.toString())
 
             if (taskState.failure != null) {
+                span?.setAttribute("error", taskState.failure?.message ?: "")
                 span?.setAttribute("task.failed", true)
                 span?.setAttribute("task.failure", taskState.failure?.message ?: "")
             }
