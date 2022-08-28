@@ -51,6 +51,7 @@ openTelemetryBuild {
 | ---------------- | --------------------------- | -------------------------------- | --------------------------------------------- |
 | endpoint**       | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to |
 | headers          | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key |
+| serviceName      | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds` |
 | exporterMode     | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | Whether to send the data to the OpenTelemetry server via GRPC (default) or HTTP |
 
 ** _Required_
