@@ -55,3 +55,13 @@ openTelemetryBuild {
 | exporterMode     | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | Whether to send the data to the OpenTelemetry server via GRPC (default) or HTTP |
 
 ** _Required_
+
+## Limitations
+
+* Incompatible with the configuration cache. This plugin uses a `BuildListener.buildFinished` event, which isn't compatible with the configuration cache
+* Uses Gradle plugin capabilities that are slated to be deprecated in Gradle 8, such as `BuildListener` and `TaskListener`
+
+## Changelog
+
+* 1.0.0
+  * Initial release
