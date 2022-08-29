@@ -9,30 +9,48 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         val extension = project.extensions.create("openTelemetryBuild", OpenTelemetryBuildPluginExtension::class.java)
 
         project.afterEvaluate {
-            project.logger.info("Configuring OpenTelemetry build plugin")
+            val enabled = extension.enabled.get()
 
-            val serviceName = extension.serviceName.orNull ?: "gradle-builds"
+            if (enabled) {
+                project.logger.info("Configuring OpenTelemetry build plugin")
 
-            val openTelemetry = OpenTelemetryInit(project.logger).init(
-                endpoint = extension.endpoint.orNull ?: throw IllegalArgumentException("OpenTelemetry endpoint is required in OpenTelemetry build plugin"),
-                headers = extension.headers.orNull ?: mapOf(),
-                serviceName = serviceName,
-                exporterMode = extension.exporterMode.get()
-            )
+                val endpoint = extension.endpoint.orNull
 
-            val tracer = openTelemetry.getTracer(serviceName)
+                if (endpoint != null) {
+                    val serviceName = extension.serviceName.orNull ?: "gradle-builds"
 
-            val rootSpanName = "${project.name}-build"
-            val rootSpan = tracer.spanBuilder(rootSpanName)
-                .setAttribute("project.name", project.name)
-                .setAttribute("gradle.version", project.gradle.gradleVersion)
-                .startSpan()
+                    val openTelemetry = OpenTelemetryInit(project.logger).init(
+                        endpoint = endpoint,
+                        headers = extension.headers.orNull ?: mapOf(),
+                        serviceName = serviceName,
+                        exporterMode = extension.exporterMode.get()
+                    )
 
-            val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
-            project.gradle.addBuildListener(buildListener)
+                    val tracer = openTelemetry.getTracer(serviceName)
 
-            val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, project.logger)
-            project.gradle.addListener(taskListener)
+                    val rootSpanName = "${project.name}-build"
+                    val rootSpan = tracer.spanBuilder(rootSpanName)
+                        .setAttribute("project.name", project.name)
+                        .setAttribute("gradle.version", project.gradle.gradleVersion)
+                        .startSpan()
+
+                    val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
+                    project.gradle.addBuildListener(buildListener)
+
+                    val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, project.logger)
+                    project.gradle.addListener(taskListener)
+                } else {
+                    project.logger.warn(missingEndpointMessage)
+                }
+            } else {
+                project.logger.info(pluginNotEnabledMessage)
+            }
         }
+    }
+
+    companion object {
+        const val pluginNotEnabledMessage = "OpenTelemetry build plugin is disabled via configuration."
+
+        const val missingEndpointMessage = """No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file."""
     }
 }
