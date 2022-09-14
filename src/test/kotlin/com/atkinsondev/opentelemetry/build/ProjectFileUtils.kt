@@ -41,7 +41,7 @@ fun createTestDirectoryAndFailingClassFile(projectRootDirPath: Path) {
             
             class FooTest {
                 @Test
-                fun `foo should return bar`() {
+                fun `foo should return bar but will fail`() {
                     assert(foo() == "baz")
                 }
             }
@@ -60,7 +60,7 @@ fun baseBuildFileContents(): String = """
     
     plugins {
         id "com.atkinsondev.opentelemetry-build"
-        id "org.jetbrains.kotlin.jvm" version "1.7.10"
+        id "org.jetbrains.kotlin.jvm" version "1.6.21"
     }
     
     repositories {

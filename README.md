@@ -4,11 +4,15 @@ Find the slowest parts of your build with the Gradle OpenTelemetry build plugin.
 with OpenTelemetry traces and spans so you can visualize all tasks executed in your build, find where the build time is going, track build duration over time, etc.
 You'll get a trace for each build with a span for every task, so you can find and optimize the bottlenecks in your build.
 
-![Trace from sample build](sample-build.png "Trace from sample build")
+![Trace from sample build](img/sample-build.png "Trace from sample build")
 
-The plugin also attaches information about test failures so you can view those as well.
+The plugin will also show you the test run breakdown per test case:
 
-![Trace with failed test](test-failure.png "Trace with failed test")
+![Trace with spans per test](img/per-test-spans.png "Trace with spans per test")
+
+And the plugin also attaches information about test failures so you can view those as well.
+
+![Trace with failed test](img/test-failure.png "Trace with failed test")
 
 ## Usage
 
@@ -18,7 +22,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id '<domain>.opentelemetry-build' version "1.0.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.0.0"
 }
 ```
 
@@ -28,7 +32,7 @@ Please see the Gradle plugin portal for the latest version of the plugin.
 
 Then add a `openTelemetryBuild` block to your `build.gradle` file.
 
-The only required configuration parameter is the server endpoint to send the OpenTelemetry data to. 
+The only required configuration parameter is the server endpoint to send the OpenTelemetry data to.
 
 ```
 openTelemetryBuild {
@@ -57,7 +61,11 @@ openTelemetryBuild {
 
 ** _Required_
 
-## Limitations
+## Compatibility
+
+The plugin is compatible with Gradle versions `6.1.1` and higher.
+
+### Limitations
 
 * Incompatible with the configuration cache. This plugin uses a `BuildListener.buildFinished` event, which isn't compatible with the configuration cache
 * Uses Gradle plugin capabilities that are slated to be deprecated in Gradle 8, such as `BuildListener` and `TaskListener`
