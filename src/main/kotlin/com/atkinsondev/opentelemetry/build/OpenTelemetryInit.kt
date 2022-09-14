@@ -6,7 +6,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
 import io.opentelemetry.sdk.trace.export.BatchSpanProcessor
-import io.opentelemetry.semconv.resource.attributes.ResourceAttributes.SERVICE_NAME
+import io.opentelemetry.semconv.resource.attributes.ResourceAttributes.*
 import org.gradle.api.logging.Logger
 import java.util.concurrent.TimeUnit
 
@@ -17,8 +17,14 @@ class OpenTelemetryInit(private val logger: Logger) {
         serviceName: String,
         exporterMode: OpenTelemetryExporterMode
     ): OpenTelemetrySdk {
+        val customResourceAttributes = Resource.builder()
+            .put(SERVICE_NAME, serviceName)
+            .put(TELEMETRY_SDK_NAME, sdkName)
+            .put(TELEMETRY_SDK_VERSION, sdkVersion)
+            .build()
+
         val resource: Resource = Resource.getDefault()
-            .merge(Resource.builder().put(SERVICE_NAME, serviceName).build())
+            .merge(customResourceAttributes)
 
         val spanExporter = if (exporterMode == OpenTelemetryExporterMode.GRPC) {
             val spanExporterBuilder = OtlpGrpcSpanExporter.builder()
@@ -54,5 +60,10 @@ class OpenTelemetryInit(private val logger: Logger) {
             .build()
 
         return openTelemetrySdk
+    }
+
+    companion object {
+        const val sdkName = "gradle-opentelemetry-build-plugin"
+        const val sdkVersion = "0.0.1" // TODO: Find a way to pull this from the Gradle file
     }
 }

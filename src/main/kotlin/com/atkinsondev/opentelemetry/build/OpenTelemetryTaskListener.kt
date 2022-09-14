@@ -1,5 +1,13 @@
 package com.atkinsondev.opentelemetry.build
 
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.errorKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.projectNameKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskDidWorkKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailedKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailureKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskNameKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskOutcomeKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskPathKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
@@ -21,10 +29,22 @@ class OpenTelemetryTaskListener(
     override fun beforeExecute(task: Task) {
         val taskKey = taskHashKey(task)
 
-        val span = tracer.spanBuilder(taskKey).setParent(Context.current().with(rootSpan)).startSpan()
+        val span = tracer
+            .spanBuilder(taskKey)
+            .setParent(Context.current().with(rootSpan))
+            .startSpan()
+            .setAttribute(projectNameKey, task.project.name)
+            .setAttribute(taskNameKey, task.name)
+            .setAttribute(taskPathKey, task.path)
 
         if (task is Test) {
-            val testListener = OpenTelemetryTestListener(logger, span)
+            val testListener = OpenTelemetryTestListener(
+                tracer = tracer,
+                testTaskSpan = span,
+                projectName = task.project.name,
+                testTaskName = task.name,
+                logger = logger,
+            )
             task.addTestListener(testListener)
         }
 
@@ -36,15 +56,15 @@ class OpenTelemetryTaskListener(
 
         val span = taskSpanMap.get(taskKey)
 
-        span?.setAttribute("task.did_work", taskState.didWork)
+        span?.setAttribute(taskDidWorkKey, taskState.didWork)
 
         if (taskState is TaskStateInternal) {
-            span?.setAttribute("task.outcome", taskState.outcome.toString())
+            span?.setAttribute(taskOutcomeKey, taskState.outcome.toString())
 
             if (taskState.failure != null) {
-                span?.setAttribute("error", taskState.failure?.message ?: "")
-                span?.setAttribute("task.failed", true)
-                span?.setAttribute("task.failure", taskState.failure?.message ?: "")
+                span?.setAttribute(errorKey, taskState.failure?.message ?: "")
+                span?.setAttribute(taskFailedKey, true)
+                span?.setAttribute(taskFailureKey, taskState.failure?.message ?: "")
             }
         }
 
