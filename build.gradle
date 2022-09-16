@@ -16,13 +16,26 @@ plugins {
 }
 
 group = "com.atkinsondev"
-version = "0.0.1-SNAPSHOT"
+version = "0.1.0"
 
 gradlePlugin {
     plugins {
         opentelemetryPlugin {
             id = 'com.atkinsondev.opentelemetry-build'
             implementationClass = 'com.atkinsondev.opentelemetry.build.OpenTelemetryBuildPlugin'
+        }
+    }
+}
+
+pluginBundle {
+    website = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
+    vcsUrl = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
+    description = 'Instrument your Gradle build with OpenTelemetry observability to find and element build bottlenecks'
+    tags = ['observability', 'opentelemetry', 'telemetry']
+
+    plugins {
+        opentelemetryPlugin {
+            displayName = 'OpenTelemetry build plugin'
         }
     }
 }

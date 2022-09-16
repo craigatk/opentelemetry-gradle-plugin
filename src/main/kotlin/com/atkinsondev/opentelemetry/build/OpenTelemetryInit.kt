@@ -30,6 +30,7 @@ class OpenTelemetryInit(private val logger: Logger) {
             val spanExporterBuilder = OtlpGrpcSpanExporter.builder()
                 .setTimeout(2, TimeUnit.SECONDS)
                 .setEndpoint(endpoint)
+                .addHeader("User-Agent", sdkName)
 
             headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
 
@@ -38,6 +39,7 @@ class OpenTelemetryInit(private val logger: Logger) {
             val spanExporterBuilder = OtlpHttpSpanExporter.builder()
                 .setTimeout(2, TimeUnit.SECONDS)
                 .setEndpoint(endpoint)
+                .addHeader("User-Agent", sdkName)
 
             headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
 
@@ -64,6 +66,6 @@ class OpenTelemetryInit(private val logger: Logger) {
 
     companion object {
         const val sdkName = "gradle-opentelemetry-build-plugin"
-        const val sdkVersion = "0.0.1" // TODO: Find a way to pull this from the Gradle file
+        const val sdkVersion = "0.1.0" // TODO: Find a way to pull this from the Gradle file
     }
 }
