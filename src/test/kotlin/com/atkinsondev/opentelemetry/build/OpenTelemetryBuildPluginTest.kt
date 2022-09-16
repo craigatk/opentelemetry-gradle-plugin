@@ -1,5 +1,6 @@
 package com.atkinsondev.opentelemetry.build
 
+import com.atkinsondev.opentelemetry.build.OpenTelemetryInit.Companion.userAgentValue
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
@@ -96,6 +97,44 @@ class OpenTelemetryBuildPluginTest {
 
             val customSdkName = "gradle-opentelemetry-build-plugin"
             expectThat(otelRequestBodies.find { it.contains(customSdkName) }).isNotNull()
+        }
+    }
+
+    @Test
+    fun `should include user agent HTTP header`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents = """
+            ${baseBuildFileContents()}
+            
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+            }
+        """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult = GradleRunner.create()
+            .withProjectDir(projectRootDirPath.toFile())
+            .withArguments("test", "--info", "--stacktrace")
+            .withPluginClasspath()
+            .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+
+            val otelRequestUserAgentHeaders = otelRequests.map { it.header("User-Agent") }
+
+            expectThat(otelRequestUserAgentHeaders).any {
+                get { values() }.contains(userAgentValue)
+            }
         }
     }
 
