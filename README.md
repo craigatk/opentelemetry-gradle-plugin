@@ -10,9 +10,13 @@ The plugin will also show you the test run breakdown per test case:
 
 ![Trace with spans per test](img/per-test-spans.png "Trace with spans per test")
 
-And the plugin also attaches information about test failures so you can view those as well.
+And the plugin also attaches information about test failures so you can view those as well:
 
 ![Trace with failed test](img/test-failure.png "Trace with failed test")
+
+The plugin will also log out the trace ID at the end of your build so you can easily find the exact trace for your build:
+
+![Trace ID log message](img/trace-id-log.png "Trace ID log message")
 
 ## Usage
 
