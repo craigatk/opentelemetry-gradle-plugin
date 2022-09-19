@@ -26,6 +26,8 @@ class OpenTelemetryBuildListener(private val rootSpan: Span, private val openTel
 
         rootSpan.end()
 
+        logger.warn("\nOpenTelemetry build trace ID ${rootSpan.spanContext.traceId}")
+
         try {
             openTelemetry.sdkTracerProvider.forceFlush()
             openTelemetry.sdkTracerProvider.shutdown()
