@@ -26,7 +26,6 @@ class OpenTelemetryBuildPluginGrpcTest {
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
-                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.GRPC
             }
         """.trimIndent()
 
