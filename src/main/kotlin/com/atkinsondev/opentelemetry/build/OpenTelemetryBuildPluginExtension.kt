@@ -11,7 +11,7 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val enabled: Property<Boolean>
 
     init {
-        exporterMode.convention(OpenTelemetryExporterMode.HTTP)
+        exporterMode.convention(OpenTelemetryExporterMode.GRPC)
         enabled.convention(true)
     }
 }

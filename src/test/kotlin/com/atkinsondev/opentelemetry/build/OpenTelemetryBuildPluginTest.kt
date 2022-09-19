@@ -26,6 +26,7 @@ class OpenTelemetryBuildPluginTest {
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 
@@ -72,6 +73,7 @@ class OpenTelemetryBuildPluginTest {
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 
@@ -109,6 +111,7 @@ class OpenTelemetryBuildPluginTest {
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 
@@ -148,6 +151,7 @@ class OpenTelemetryBuildPluginTest {
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
                 headers = ["foo1": "bar1", "foo2": "bar2"]
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 
@@ -185,6 +189,7 @@ class OpenTelemetryBuildPluginTest {
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 
@@ -245,6 +250,7 @@ class OpenTelemetryBuildPluginTest {
             openTelemetryBuild {
                 enabled = false
                 endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
         """.trimIndent()
 

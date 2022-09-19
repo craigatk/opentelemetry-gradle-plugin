@@ -12,11 +12,11 @@ plugins {
     id "org.jlleitschuh.gradle.ktlint" version "10.3.0"
     id "dev.projektor.publish" version "7.7.0"
     id 'com.gradle.plugin-publish' version "0.21.0"
-    //id 'com.atkinsondev.opentelemetry-build' version "0.0.1-SNAPSHOT"
+    id "com.atkinsondev.opentelemetry-build" version "0.1.0"
 }
 
 group = "com.atkinsondev"
-version = "0.1.0"
+version = "0.1.1"
 
 gradlePlugin {
     plugins {
@@ -75,7 +75,6 @@ projektor {
     publishToken = System.getenv("PROJEKTOR_TOKEN") ?: project.findProperty('projektor_publish_token') ?: null
 }
 
-/*
 openTelemetryBuild {
     endpoint = "https://api.honeycomb.io"
     headers = [
@@ -83,4 +82,3 @@ openTelemetryBuild {
             "x-honeycomb-dataset": "otel-gradle"
     ]
 }
- */
