@@ -32,6 +32,7 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                     val rootSpan = tracer.spanBuilder(rootSpanName)
                         .setAttribute("project.name", project.name)
                         .setAttribute("gradle.version", project.gradle.gradleVersion)
+                        .setAttribute("system.is_ci", isCI("CI"))
                         .startSpan()
 
                     val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
@@ -52,5 +53,7 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         const val pluginNotEnabledMessage = "OpenTelemetry build plugin is disabled via configuration."
 
         const val missingEndpointMessage = """No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file."""
+
+        fun isCI(ciEnvVariableName: String): Boolean = System.getenv(ciEnvVariableName) != null
     }
 }

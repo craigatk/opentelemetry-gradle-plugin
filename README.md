@@ -18,6 +18,53 @@ The plugin will also log out the trace ID at the end of your build so you can ea
 
 ![Trace ID log message](img/trace-id-log.png "Trace ID log message")
 
+## OpenTelemetry spans and attributes
+
+The plugin creates a single trace for each build, with an overall span for the build and child individual spans for each task.
+The plugin also creates individual span for each test executed in a Gradle task with the `Test` type.
+
+### Span attributes
+
+The plugin adds the following attributes to the different spans it creates.
+
+Root build span is named `${project.name}-build`, for example this plugin's root span is named `opentelemetry-gradle-plugin-build`
+And the root span has the following attributes:
+
+| Span attribute name | Description |
+| ------------------- | ----------- |
+| `project.name`      | Name of the Gradle project |
+| `gradle.version`    | Version of Gradle used to run the build |
+| `success`           | Whether the build succeeded or failed (boolean) |
+| `system.is_ci`      | Whether the build was run in a CI environment or not (checks for existence of a `CI` environment variable) |
+
+Each task has a child span created from the root build.
+The task spans are named with the task path, for example `:test`
+And each task span has the following attributes:
+
+| Span attribute name | Description |
+| ------------------- | ----------- |
+| `task.name`         | Name of the task, e.g. `test` |
+| `project.name`      | Name of the Gradle project |
+| `task.path`         | Full path to the task, including subproject names. E.g. `:app:test` |
+| `task.outcome`      | Outcome of the task, e.g. `SUCCESS`, `UP-TO-DATE`, or `FROM-CACHE` |
+| `task.did_work`     | Whether the task did work (boolean) |
+| `error`             | If the task failed, the failure message |
+| `task.failed`       | Set to `true` if the task failed |
+| `task.failure`      | If the task failed, the failure message |
+
+And finally the plugin creates a child span off each `Test` type task for each test executed.
+The name of the per-test span is the full name of the test method.
+And the attributes on the per-test spans are:
+
+| Span attribute name       | Description |
+| ------------------------- | ----------- |
+| `test.result`             | Result of the test, e.g. `SUCCESS` or `FAILURE`
+| `error`                   | If the test failed, the failure message |
+| `test.failure.message`    | If the test failed, the failure message |
+| `test.failure.stacktrace` | If the test failed, abbreviated stack trace of the failure |
+| `task.name`               | Name of the task, e.g. `test` |
+| `project.name`            | Name of the Gradle project | 
+
 ## Usage
 
 ### Add plugin
@@ -26,7 +73,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.0.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.0.1"
 }
 ```
 
@@ -75,5 +122,7 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.0.1
+  * Adding `system.is_ci` attribute to root build span
 * 1.0.0
   * Initial release

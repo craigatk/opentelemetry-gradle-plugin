@@ -219,6 +219,46 @@ class OpenTelemetryBuildPluginTest {
     }
 
     @Test
+    fun `when plugin run in CI should include is-CI attribute`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents = """
+            ${baseBuildFileContents()}
+            
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+            }
+        """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult = GradleRunner.create()
+            .withProjectDir(projectRootDirPath.toFile())
+            .withArguments("test", "--info", "--stacktrace")
+            .withEnvironment(mapOf("CI" to "true"))
+            .withPluginClasspath()
+            .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+
+            val otelRequestBodies = otelRequests.map { it.bodyAsString }
+
+            val ciSpanAttributeName = "system.is_ci"
+            val ciAttributeBody = otelRequestBodies.find { it.contains(ciSpanAttributeName) }
+            expectThat(ciAttributeBody).isNotNull()
+        }
+    }
+
+    @Test
     fun `when plugin is applied but no endpoint defined should log message and disable plugin`(@TempDir projectRootDirPath: Path) {
         val buildFileContents = """
             ${baseBuildFileContents()}
