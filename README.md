@@ -73,7 +73,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.0.1"
+    id 'com.atkinsondev.opentelemetry-build' version "1.1.0"
 }
 ```
 
@@ -122,6 +122,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.1.0
+  * Upgrading to OpenTelemetry SDK 1.18.0
 * 1.0.1
   * Adding `system.is_ci` attribute to root build span
 * 1.0.0
