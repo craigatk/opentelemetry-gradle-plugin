@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.atkinsondev"
-version = "1.0.1"
+version = "1.1.0"
 
 gradlePlugin {
     plugins {
@@ -30,7 +30,7 @@ gradlePlugin {
 pluginBundle {
     website = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
     vcsUrl = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
-    description = 'Instrument your Gradle build with OpenTelemetry observability to find and element build bottlenecks'
+    description = 'Instrument your Gradle build with OpenTelemetry observability to find and eliminate build bottlenecks'
     tags = ['observability', 'opentelemetry', 'telemetry']
 
     plugins {
