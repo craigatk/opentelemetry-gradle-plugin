@@ -19,30 +19,40 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                 if (endpoint != null) {
                     val serviceName = extension.serviceName.orNull ?: "gradle-builds"
 
-                    val openTelemetry = OpenTelemetryInit(project.logger).init(
-                        endpoint = endpoint,
-                        headers = extension.headers.orNull ?: mapOf(),
-                        serviceName = serviceName,
-                        exporterMode = extension.exporterMode.get()
-                    )
+                    val headers: Map<String, String>? = try {
+                        extension.headers.orNull ?: mapOf()
+                    } catch (e: Exception) {
+                        null
+                    }
 
-                    val tracer = openTelemetry.getTracer(serviceName)
+                    if (headers != null) {
+                        val openTelemetry = OpenTelemetryInit(project.logger).init(
+                            endpoint = endpoint,
+                            headers = headers,
+                            serviceName = serviceName,
+                            exporterMode = extension.exporterMode.get()
+                        )
 
-                    val taskNames = project.gradle.startParameter.taskNames
+                        val tracer = openTelemetry.getTracer(serviceName)
 
-                    val rootSpanName = "${project.name}-build"
-                    val rootSpan = tracer.spanBuilder(rootSpanName)
-                        .setAttribute("project.name", project.name)
-                        .setAttribute("gradle.version", project.gradle.gradleVersion)
-                        .setAttribute("system.is_ci", isCI("CI"))
-                        .setAttribute("build.task.names", taskNames.joinToString(" "))
-                        .startSpan()
+                        val taskNames = project.gradle.startParameter.taskNames
 
-                    val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
-                    project.gradle.addBuildListener(buildListener)
+                        val rootSpanName = "${project.name}-build"
+                        val rootSpan = tracer.spanBuilder(rootSpanName)
+                            .setAttribute("project.name", project.name)
+                            .setAttribute("gradle.version", project.gradle.gradleVersion)
+                            .setAttribute("system.is_ci", isCI("CI"))
+                            .setAttribute("build.task.names", taskNames.joinToString(" "))
+                            .startSpan()
 
-                    val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, project.logger)
-                    project.gradle.addListener(taskListener)
+                        val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
+                        project.gradle.addBuildListener(buildListener)
+
+                        val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, project.logger)
+                        project.gradle.addListener(taskListener)
+                    } else {
+                        project.logger.warn(configErrorMessage)
+                    }
                 } else {
                     project.logger.warn(missingEndpointMessage)
                 }
@@ -56,6 +66,8 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         const val pluginNotEnabledMessage = "OpenTelemetry build plugin is disabled via configuration."
 
         const val missingEndpointMessage = """No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file."""
+
+        const val configErrorMessage = "Error reading config for OpenTelemetry build plugin - disabling plugin."
 
         fun isCI(ciEnvVariableName: String): Boolean = System.getenv(ciEnvVariableName) != null
     }
