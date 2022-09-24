@@ -47,6 +47,7 @@ And each task span has the following attributes:
 | `task.name`         | Name of the task, e.g. `test` |
 | `project.name`      | Name of the Gradle project |
 | `task.path`         | Full path to the task, including subproject names. E.g. `:app:test` |
+| `task.type`         | Full package and class name of the task, e.g. `org.gradle.api.tasks.testing.Test`
 | `task.outcome`      | Outcome of the task, e.g. `SUCCESS`, `UP-TO-DATE`, or `FROM-CACHE` |
 | `task.did_work`     | Whether the task did work (boolean) |
 | `error`             | If the task failed, the failure message |
@@ -74,7 +75,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.1.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.1.2"
 }
 ```
 
@@ -123,6 +124,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.1.2
+  * Adding task type to task span attribute `task.type`
 * 1.1.1
   * Adding task names from Gradle execution as `build.task.names` attribute to root span
 * 1.1.0

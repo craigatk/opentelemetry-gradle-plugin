@@ -7,6 +7,7 @@ object OpenTelemetryBuildSpanData {
     // Task attributes
     const val taskNameKey = "task.name"
     const val taskPathKey = "task.path"
+    const val taskTypeKey = "task.type"
     const val taskDidWorkKey = "task.did_work"
     const val taskOutcomeKey = "task.outcome"
     const val errorKey = "error"
