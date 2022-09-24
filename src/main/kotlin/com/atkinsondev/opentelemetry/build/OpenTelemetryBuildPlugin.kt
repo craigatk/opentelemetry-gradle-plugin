@@ -28,11 +28,14 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                     val tracer = openTelemetry.getTracer(serviceName)
 
+                    val taskNames = project.gradle.startParameter.taskNames
+
                     val rootSpanName = "${project.name}-build"
                     val rootSpan = tracer.spanBuilder(rootSpanName)
                         .setAttribute("project.name", project.name)
                         .setAttribute("gradle.version", project.gradle.gradleVersion)
                         .setAttribute("system.is_ci", isCI("CI"))
+                        .setAttribute("build.task.names", taskNames.joinToString(" "))
                         .startSpan()
 
                     val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)

@@ -259,6 +259,44 @@ class OpenTelemetryBuildPluginTest {
     }
 
     @Test
+    fun `should include task names`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents = """
+            ${baseBuildFileContents()}
+            
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+            }
+        """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult = GradleRunner.create()
+            .withProjectDir(projectRootDirPath.toFile())
+            .withArguments("compileKotlin", "test", "--info")
+            .withPluginClasspath()
+            .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+
+            val otelRequestBodies = otelRequests.map { it.bodyAsString }
+
+            val taskNames = "compileKotlin test"
+            expectThat(otelRequestBodies.find { it.contains(taskNames) }).isNotNull()
+        }
+    }
+
+    @Test
     fun `when plugin is applied but no endpoint defined should log message and disable plugin`(@TempDir projectRootDirPath: Path) {
         val buildFileContents = """
             ${baseBuildFileContents()}
