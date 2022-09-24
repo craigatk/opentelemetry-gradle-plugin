@@ -8,6 +8,7 @@ import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailur
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskNameKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskOutcomeKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskPathKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskTypeKey
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
@@ -36,6 +37,7 @@ class OpenTelemetryTaskListener(
             .setAttribute(projectNameKey, task.project.name)
             .setAttribute(taskNameKey, task.name)
             .setAttribute(taskPathKey, task.path)
+            .setAttribute(taskTypeKey, task.javaClass.name.replace("_Decorated", ""))
 
         if (task is Test) {
             val testListener = OpenTelemetryTestListener(
