@@ -22,7 +22,7 @@ class OpenTelemetryBuildListener(private val rootSpan: Span, private val openTel
     }
 
     override fun buildFinished(buildResult: BuildResult) {
-        rootSpan.setAttribute("success", buildResult.failure == null)
+        rootSpan.setAttribute("build.success", buildResult.failure == null)
 
         rootSpan.end()
 

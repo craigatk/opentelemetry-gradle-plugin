@@ -66,7 +66,7 @@ class OpenTelemetryInit(private val logger: Logger) {
 
     companion object {
         const val sdkName = "gradle-opentelemetry-build-plugin"
-        const val sdkVersion = "1.0.1" // TODO: Find a way to pull this from the Gradle file
+        const val sdkVersion = "1.1.1" // TODO: Find a way to pull this from the Gradle file
         const val userAgentValue = "$sdkName / $sdkVersion"
     }
 }

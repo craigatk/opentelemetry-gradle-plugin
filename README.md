@@ -34,7 +34,8 @@ And the root span has the following attributes:
 | ------------------- | ----------- |
 | `project.name`      | Name of the Gradle project |
 | `gradle.version`    | Version of Gradle used to run the build |
-| `success`           | Whether the build succeeded or failed (boolean) |
+| `build.task.names`  | Tasks included in the Gradle command that ran the build. For example, if you ran `./gradlew test build` this attribute would be "test build" |
+| `build.success`     | Whether the build succeeded or failed (boolean) |
 | `system.is_ci`      | Whether the build was run in a CI environment or not (checks for existence of a `CI` environment variable) |
 
 Each task has a child span created from the root build.
@@ -122,6 +123,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.1.1
+  * Adding task names from Gradle execution as `build.task.names` attribute to root span
 * 1.1.0
   * Upgrading to OpenTelemetry SDK 1.18.0
 * 1.0.1
