@@ -124,6 +124,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.2.1
+  * Fix formatting of user-agent string
 * 1.2.0
   * Disable the plugin gracefully if there is an error parsing the headers config
 * 1.1.2
