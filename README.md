@@ -75,7 +75,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.2.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.2.1"
 }
 ```
 
