@@ -1,8 +1,10 @@
 package com.atkinsondev.opentelemetry.build
 
 object OpenTelemetryBuildSpanData {
-    // Project attributes
+    // Attributes on all spans
     const val projectNameKey = "project.name"
+    const val gradleVersionKey = "gradle.version"
+    const val isCIKey = "system.is_ci"
 
     // Task attributes
     const val taskNameKey = "task.name"

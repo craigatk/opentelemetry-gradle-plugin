@@ -3,11 +3,11 @@ package com.atkinsondev.opentelemetry.build
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.errorKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.failureMessageKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.failureStacktraceKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.projectNameKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskNameKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.testFailureSpanEventName
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.testNameKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.testResultKey
+import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.common.AttributeKey.stringKey
 import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
@@ -24,7 +24,7 @@ import kotlin.math.min
 class OpenTelemetryTestListener(
     private val tracer: Tracer,
     private val testTaskSpan: Span,
-    private val projectName: String,
+    private val baggage: Baggage,
     private val testTaskName: String,
     private val logger: Logger,
 ) : TestListener {
@@ -42,11 +42,11 @@ class OpenTelemetryTestListener(
         val span = tracer
             .spanBuilder(fullDisplayName(test))
             .setParent(Context.current().with(testTaskSpan))
+            .addBaggage(baggage)
             .startSpan()
-            .setAttribute(projectNameKey, projectName)
             .setAttribute(taskNameKey, testTaskName)
 
-        testSpanMap.put(testKey, span)
+        testSpanMap[testKey] = span
     }
 
     override fun afterTest(test: TestDescriptor, testResult: TestResult) {
@@ -59,7 +59,6 @@ class OpenTelemetryTestListener(
 
             val attributesBuilder = Attributes.builder()
                 .put(stringKey(testNameKey), fullDisplayName(test))
-                .put(stringKey(projectNameKey), projectName)
                 .put(stringKey(taskNameKey), testTaskName)
 
             if (testResultException != null) {
@@ -70,7 +69,7 @@ class OpenTelemetryTestListener(
             testTaskSpan.addEvent(testFailureSpanEventName, attributesBuilder.build())
         }
 
-        val span = testSpanMap.get(testKey)
+        val span = testSpanMap[testKey]
 
         if (testResultException != null) {
             span?.setAttribute(errorKey, testResultException.message ?: "")

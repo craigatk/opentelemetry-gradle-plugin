@@ -1,5 +1,9 @@
 package com.atkinsondev.opentelemetry.build
 
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.gradleVersionKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.isCIKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.projectNameKey
+import io.opentelemetry.api.baggage.Baggage
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
@@ -37,18 +41,23 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                         val taskNames = project.gradle.startParameter.taskNames
 
+                        // Put the following attributes on all spans
+                        val baggage = Baggage.builder()
+                            .put(projectNameKey, project.name)
+                            .put(gradleVersionKey, project.gradle.gradleVersion)
+                            .put(isCIKey, isCI("CI").toString())
+                            .build()
+
                         val rootSpanName = "${project.name}-build"
                         val rootSpan = tracer.spanBuilder(rootSpanName)
-                            .setAttribute("project.name", project.name)
-                            .setAttribute("gradle.version", project.gradle.gradleVersion)
-                            .setAttribute("system.is_ci", isCI("CI"))
                             .setAttribute("build.task.names", taskNames.joinToString(" "))
+                            .addBaggage(baggage)
                             .startSpan()
 
                         val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
                         project.gradle.addBuildListener(buildListener)
 
-                        val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, project.logger)
+                        val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, baggage, project.logger)
                         project.gradle.addListener(taskListener)
                     } else {
                         project.logger.warn(configErrorMessage)
