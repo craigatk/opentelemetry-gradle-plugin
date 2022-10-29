@@ -121,7 +121,7 @@ openTelemetryBuild {
 | endpoint**       | `String`                                                        | `null`                           | OpenTelemetry server endpoint to send data to |
 | headers          | `Map<String, String>`                                           | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key |
 | serviceName      | `String`                                                        | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds` |
-| exporterMode     | `com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
+| exporterMode     | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
 | enabled          | `Boolean`                                                       | `true`                           | Whether the plugin is enabled or not |
 
 ** _Required_
