@@ -2,6 +2,7 @@ package com.atkinsondev.opentelemetry.build
 
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
+import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
 import io.opentelemetry.sdk.OpenTelemetrySdk
 import io.opentelemetry.sdk.resources.Resource
 import io.opentelemetry.sdk.trace.SdkTracerProvider
@@ -26,24 +27,36 @@ class OpenTelemetryInit(private val logger: Logger) {
         val resource: Resource = Resource.getDefault()
             .merge(customResourceAttributes)
 
-        val spanExporter = if (exporterMode == OpenTelemetryExporterMode.GRPC) {
-            val spanExporterBuilder = OtlpGrpcSpanExporter.builder()
-                .setTimeout(2, TimeUnit.SECONDS)
-                .setEndpoint(endpoint)
-                .addHeader("User-Agent", userAgentValue)
+        val spanExporter = when (exporterMode) {
+            OpenTelemetryExporterMode.GRPC -> {
+                val spanExporterBuilder = OtlpGrpcSpanExporter.builder()
+                    .setTimeout(2, TimeUnit.SECONDS)
+                    .setEndpoint(endpoint)
+                    .addHeader("User-Agent", userAgentValue)
 
-            headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
+                headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
 
-            spanExporterBuilder.build()
-        } else {
-            val spanExporterBuilder = OtlpHttpSpanExporter.builder()
-                .setTimeout(2, TimeUnit.SECONDS)
-                .setEndpoint(endpoint)
-                .addHeader("User-Agent", userAgentValue)
+                spanExporterBuilder.build()
+            }
 
-            headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
+            OpenTelemetryExporterMode.ZIPKIN -> {
+                val spanExporterBuilder = ZipkinSpanExporter.builder()
+                    .setReadTimeout(2, TimeUnit.SECONDS)
+                    .setEndpoint(endpoint)
 
-            spanExporterBuilder.build()
+                spanExporterBuilder.build()
+            }
+
+            else -> {
+                val spanExporterBuilder = OtlpHttpSpanExporter.builder()
+                    .setTimeout(2, TimeUnit.SECONDS)
+                    .setEndpoint(endpoint)
+                    .addHeader("User-Agent", userAgentValue)
+
+                headers.forEach { (key, value) -> spanExporterBuilder.addHeader(key, value) }
+
+                spanExporterBuilder.build()
+            }
         }
 
         logger.info("Registering OpenTelemetry with mode $exporterMode")

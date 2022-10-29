@@ -75,7 +75,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.2.1"
+    id 'com.atkinsondev.opentelemetry-build' version "1.2.2"
 }
 ```
 
@@ -102,6 +102,15 @@ openTelemetryBuild {
 }
 ```
 
+### Zipkin Exporter configuration
+```
+openTelemetryBuild {
+    endpoint.value("https://yourzipkinserver.com/api/v2/spans")
+    serviceName.value("appname-build")
+    exporterMode.set(com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.ZIPKIN)
+}
+```
+
 #### All configuration options
 
 | Parameter                | Type                | Default                          | Description                                   |
@@ -124,6 +133,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.2.2
+  * Added support for Zipkin exporter. Upgrading to Opentelemetry 1.19.0
 * 1.2.1
   * Fix formatting of user-agent string
 * 1.2.0
