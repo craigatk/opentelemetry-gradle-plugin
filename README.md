@@ -106,6 +106,11 @@ openTelemetryBuild {
 ```
 
 ### Zipkin Exporter configuration
+
+In addition to the standard gRPC or HTTP OpenTelemetry exporters, the plugin supports exporting to Zipkin.
+
+To export to Zipkin, set the `exporterMode` plugin configuration parameter to `OpenTelemetryExporterMode.ZIPKIN` and set the `endpoint` to be your Zipkin server API endpoint, similar to the following:
+
 ```
 openTelemetryBuild {
     endpoint = "https://yourzipkinserver.com/api/v2/spans"
