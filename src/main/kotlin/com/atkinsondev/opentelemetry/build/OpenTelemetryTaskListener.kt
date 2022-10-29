@@ -1,7 +1,6 @@
 package com.atkinsondev.opentelemetry.build
 
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.errorKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.projectNameKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskDidWorkKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailedKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailureKey
@@ -9,6 +8,7 @@ import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskNameKe
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskOutcomeKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskPathKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskTypeKey
+import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentHashMap
 class OpenTelemetryTaskListener(
     private val tracer: Tracer,
     private val rootSpan: Span,
+    private val baggage: Baggage,
     private val logger: Logger
 ) : TaskExecutionListener {
     private val taskSpanMap = ConcurrentHashMap<String, Span>()
@@ -33,8 +34,8 @@ class OpenTelemetryTaskListener(
         val span = tracer
             .spanBuilder(taskKey)
             .setParent(Context.current().with(rootSpan))
+            .addBaggage(baggage)
             .startSpan()
-            .setAttribute(projectNameKey, task.project.name)
             .setAttribute(taskNameKey, task.name)
             .setAttribute(taskPathKey, task.path)
             .setAttribute(taskTypeKey, task.javaClass.name.replace("_Decorated", ""))
@@ -43,20 +44,20 @@ class OpenTelemetryTaskListener(
             val testListener = OpenTelemetryTestListener(
                 tracer = tracer,
                 testTaskSpan = span,
-                projectName = task.project.name,
+                baggage = baggage,
                 testTaskName = task.name,
                 logger = logger,
             )
             task.addTestListener(testListener)
         }
 
-        taskSpanMap.put(taskKey, span)
+        taskSpanMap[taskKey] = span
     }
 
     override fun afterExecute(task: Task, taskState: TaskState) {
         val taskKey = taskHashKey(task)
 
-        val span = taskSpanMap.get(taskKey)
+        val span = taskSpanMap[taskKey]
 
         span?.setAttribute(taskDidWorkKey, taskState.didWork)
 

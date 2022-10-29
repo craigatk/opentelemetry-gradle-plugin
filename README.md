@@ -32,10 +32,15 @@ And the root span has the following attributes:
 
 | Span attribute name | Description |
 | ------------------- | ----------- |
-| `project.name`      | Name of the Gradle project |
-| `gradle.version`    | Version of Gradle used to run the build |
 | `build.task.names`  | Tasks included in the Gradle command that ran the build. For example, if you ran `./gradlew test build` this attribute would be "test build" |
 | `build.success`     | Whether the build succeeded or failed (boolean) |
+
+All spans (root span, task spans, etc.) have the following attributes:
+
+| Span attribute name | Description |
+| ------------------- | ----------- |
+| `project.name`      | Name of the Gradle project |
+| `gradle.version`    | Version of Gradle used to run the build |
 | `system.is_ci`      | Whether the build was run in a CI environment or not (checks for existence of a `CI` environment variable) |
 
 Each task has a child span created from the root build.
@@ -45,7 +50,6 @@ And each task span has the following attributes:
 | Span attribute name | Description |
 | ------------------- | ----------- |
 | `task.name`         | Name of the task, e.g. `test` |
-| `project.name`      | Name of the Gradle project |
 | `task.path`         | Full path to the task, including subproject names. E.g. `:app:test` |
 | `task.type`         | Full package and class name of the task, e.g. `org.gradle.api.tasks.testing.Test`
 | `task.outcome`      | Outcome of the task, e.g. `SUCCESS`, `UP-TO-DATE`, or `FROM-CACHE` |
@@ -65,7 +69,6 @@ And the attributes on the per-test spans are:
 | `test.failure.message`    | If the test failed, the failure message |
 | `test.failure.stacktrace` | If the test failed, abbreviated stack trace of the failure |
 | `task.name`               | Name of the task, e.g. `test` |
-| `project.name`            | Name of the Gradle project | 
 
 ## Usage
 
@@ -75,7 +78,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.3.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.3.1"
 }
 ```
 
@@ -134,6 +137,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.3.1
+  * Using baggage to put attributes `project.name`, `gradle.version`, and `system.is_ci` on all spans the plugin creates
 * 1.3.0
   * Added support for Zipkin exporter. Upgrading to OpenTelemetry 1.19.0
 * 1.2.1
