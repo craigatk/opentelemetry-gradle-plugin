@@ -142,6 +142,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.5.0
+  * Upgrading to OpenTelemetry 1.22.0 and Kotlin 1.8.0
 * 1.4.0
   * Upgrading to OpenTelemetry 1.20.0 and Kotlin 1.7.21
 * 1.3.1
