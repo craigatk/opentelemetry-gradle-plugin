@@ -48,7 +48,7 @@ dependencies {
 
     testImplementation gradleTestKit()
 
-    testImplementation(platform("org.junit:junit-bom:5.9.2"))
+    testImplementation(platform("org.junit:junit-bom:5.9.3"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0"
