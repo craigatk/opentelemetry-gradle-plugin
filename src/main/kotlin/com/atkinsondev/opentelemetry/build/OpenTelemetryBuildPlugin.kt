@@ -9,7 +9,6 @@ import org.gradle.api.Project
 
 class OpenTelemetryBuildPlugin : Plugin<Project> {
     override fun apply(project: Project) {
-
         val extension = project.extensions.create("openTelemetryBuild", OpenTelemetryBuildPluginExtension::class.java)
 
         project.afterEvaluate {
@@ -34,7 +33,7 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                             endpoint = endpoint,
                             headers = headers,
                             serviceName = serviceName,
-                            exporterMode = extension.exporterMode.get()
+                            exporterMode = extension.exporterMode.get(),
                         )
 
                         val tracer = openTelemetry.getTracer(serviceName)

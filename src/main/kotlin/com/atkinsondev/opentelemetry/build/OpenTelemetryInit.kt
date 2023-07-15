@@ -16,7 +16,7 @@ class OpenTelemetryInit(private val logger: Logger) {
         endpoint: String,
         headers: Map<String, String>,
         serviceName: String,
-        exporterMode: OpenTelemetryExporterMode
+        exporterMode: OpenTelemetryExporterMode,
     ): OpenTelemetrySdk {
         val customResourceAttributes = Resource.builder()
             .put(SERVICE_NAME, serviceName)
@@ -68,9 +68,9 @@ class OpenTelemetryInit(private val logger: Logger) {
                     .addSpanProcessor(
                         BatchSpanProcessor.builder(spanExporter)
                             .setScheduleDelay(100, TimeUnit.MILLISECONDS)
-                            .build()
+                            .build(),
                     )
-                    .build()
+                    .build(),
             )
             .build()
 
