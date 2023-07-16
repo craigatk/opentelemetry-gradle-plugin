@@ -24,7 +24,7 @@ class OpenTelemetryTaskListener(
     private val tracer: Tracer,
     private val rootSpan: Span,
     private val baggage: Baggage,
-    private val logger: Logger
+    private val logger: Logger,
 ) : TaskExecutionListener {
     private val taskSpanMap = ConcurrentHashMap<String, Span>()
 
