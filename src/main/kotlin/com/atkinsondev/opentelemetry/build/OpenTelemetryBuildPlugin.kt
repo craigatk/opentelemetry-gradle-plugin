@@ -28,12 +28,19 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                         null
                     }
 
+                    val customTags: Map<String, String>? = try {
+                        extension.customTags.orNull ?: mapOf()
+                    } catch (e: Exception) {
+                        null
+                    }
+
                     if (headers != null) {
                         val openTelemetry = OpenTelemetryInit(project.logger).init(
                             endpoint = endpoint,
                             headers = headers,
                             serviceName = serviceName,
                             exporterMode = extension.exporterMode.get(),
+                            customTags = customTags.orEmpty(),
                         )
 
                         val tracer = openTelemetry.getTracer(serviceName)
