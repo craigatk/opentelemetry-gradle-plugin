@@ -202,10 +202,10 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult = GradleRunner.create()
-                .withProjectDir(projectRootDirPath.toFile())
-                .withArguments("test", "--info", "--stacktrace")
-                .withPluginClasspath()
-                .build()
+            .withProjectDir(projectRootDirPath.toFile())
+            .withArguments("test", "--info", "--stacktrace")
+            .withPluginClasspath()
+            .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
