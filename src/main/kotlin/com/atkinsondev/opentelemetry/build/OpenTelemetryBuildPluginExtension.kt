@@ -9,6 +9,7 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val serviceName: Property<String>
     abstract val exporterMode: Property<OpenTelemetryExporterMode>
     abstract val enabled: Property<Boolean>
+    abstract val customTags: MapProperty<String, String>
 
     init {
         exporterMode.convention(OpenTelemetryExporterMode.GRPC)

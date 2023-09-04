@@ -1,5 +1,6 @@
 package com.atkinsondev.opentelemetry.build
 
+import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.exporter.otlp.http.trace.OtlpHttpSpanExporter
 import io.opentelemetry.exporter.otlp.trace.OtlpGrpcSpanExporter
 import io.opentelemetry.exporter.zipkin.ZipkinSpanExporter
@@ -17,11 +18,17 @@ class OpenTelemetryInit(private val logger: Logger) {
         headers: Map<String, String>,
         serviceName: String,
         exporterMode: OpenTelemetryExporterMode,
+        customTags: Map<String, String>,
     ): OpenTelemetrySdk {
+        val customAttributesBuilder = Attributes.builder()
+        customTags.forEach { (key, value) -> customAttributesBuilder.put(key, value) }
+        val customAttributes = customAttributesBuilder.build()
+
         val customResourceAttributes = Resource.builder()
             .put(SERVICE_NAME, serviceName)
             .put(TELEMETRY_SDK_NAME, sdkName)
             .put(TELEMETRY_SDK_VERSION, sdkVersion)
+            .putAll(customAttributes)
             .build()
 
         val resource: Resource = Resource.getDefault()

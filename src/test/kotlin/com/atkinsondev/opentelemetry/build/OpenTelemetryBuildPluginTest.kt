@@ -181,6 +181,48 @@ class OpenTelemetryBuildPluginTest {
     }
 
     @Test
+    fun `should send data to OpenTelemetry with custom attributes`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents = """
+            ${baseBuildFileContents()}
+            
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+                customTags = ["foo1": "bar1", "foo2": "bar2"]
+            }
+        """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult = GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+            val otelRequestBodies = otelRequests.map { it.bodyAsString }
+            System.out.print(otelRequestBodies)
+
+            expectThat(otelRequests).isNotEmpty()
+            expectThat(otelRequestBodies.find { it.contains("foo1") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("bar1") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("foo2") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("bar2") }).isNotNull()
+        }
+    }
+
+    @Test
     fun `when test fails should send failure data`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
