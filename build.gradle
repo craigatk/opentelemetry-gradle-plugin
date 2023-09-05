@@ -51,7 +51,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.0"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    testImplementation "com.github.tomakehurst:wiremock-jre8:2.35.0"
+    testImplementation "com.github.tomakehurst:wiremock-jre8:3.0.1"
 
     testImplementation("io.strikt:strikt-core:0.34.1")
 
