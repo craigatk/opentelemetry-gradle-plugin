@@ -1,9 +1,9 @@
 package com.atkinsondev.opentelemetry.build
 
-import com.github.tomakehurst.wiremock.client.WireMock.*
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
-import org.awaitility.Awaitility.await
+import org.awaitility.Awaitility
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.io.TempDir
@@ -16,40 +16,39 @@ import java.io.File
 import java.nio.file.Path
 
 @WireMockTest
-class OpenTelemetryBuildPluginCrossVersionTest {
-
+class OpenTelemetryBuildPluginKotlinScriptTest {
     @ParameterizedTest
-    @ValueSource(strings = ["6.1.1", "6.9.1", "7.0", "7.6.1", "8.4"])
-    fun `should send data to OpenTelemetry with HTTP with different Gradle versions`(gradleVersion: String, wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    @ValueSource(strings = ["7.6.3", "8.4"])
+    fun `should send data to OpenTelemetry when using a Kotlin build script`(gradleVersion: String, wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
         val buildFileContents = """
-            ${baseBuildFileContents()}
+            ${baseKotlinBuildFileContents()}
             
-            openTelemetryBuild {
-                endpoint = '$wiremockBaseUrl/otel'
-                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+             configure<com.atkinsondev.opentelemetry.build.OpenTelemetryBuildPluginExtension> {
+                endpoint.set("$wiremockBaseUrl/otel")
+                exporterMode.set(com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP)
             }
         """.trimIndent()
 
-        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+        File(projectRootDirPath.toFile(), "build.gradle.kts").writeText(buildFileContents)
 
         createSrcDirectoryAndClassFile(projectRootDirPath)
         createTestDirectoryAndClassFile(projectRootDirPath)
 
-        stubFor(post("/otel").willReturn(ok()))
+        WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
         val buildResult = GradleRunner.create()
             .withProjectDir(projectRootDirPath.toFile())
             .withArguments("test", "--info", "--stacktrace")
-            .withGradleVersion(gradleVersion)
             .withPluginClasspath()
+            .withGradleVersion(gradleVersion)
             .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
-        await().untilAsserted {
-            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+        Awaitility.await().untilAsserted {
+            val otelRequests = WireMock.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo("/otel")))
 
             val otelRequestBodies = otelRequests.map { it.bodyAsString }
 
@@ -57,8 +56,8 @@ class OpenTelemetryBuildPluginCrossVersionTest {
             expectThat(otelRequestBodies.find { it.contains(rootSpanName) }).isNotNull()
         }
 
-        await().untilAsserted {
-            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+        Awaitility.await().untilAsserted {
+            val otelRequests = WireMock.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo("/otel")))
 
             val otelRequestBodies = otelRequests.map { it.bodyAsString }
 

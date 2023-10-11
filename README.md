@@ -78,7 +78,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.6.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.6.1"
 }
 ```
 
@@ -143,6 +143,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.6.1
+  * Downgrading Kotlin 1.7.10 to match the Kotlin version bundled with Gradle 7.6 ([Gradle compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html#kotlin))
 * 1.6.0
   * Adding support for custom telemetry attributes (thanks @kpriemchenko !) 
   * Upgrading to OpenTelemetry 1.29.0 and Kotlin 1.9.0 

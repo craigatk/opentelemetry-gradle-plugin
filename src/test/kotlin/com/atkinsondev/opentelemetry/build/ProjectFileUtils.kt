@@ -76,3 +76,29 @@ fun baseBuildFileContents(): String = """
         useJUnitPlatform()
     }
 """.trimIndent()
+
+fun baseKotlinBuildFileContents(): String = """
+    buildscript {
+        repositories {
+            mavenCentral()
+        }
+    }
+
+    plugins {
+        id("org.jetbrains.kotlin.jvm") version "1.9.10"
+        id("com.atkinsondev.opentelemetry-build")
+    }
+    
+    repositories {
+        mavenCentral()
+    }
+    
+    dependencies {
+        testImplementation(platform("org.junit:junit-bom:5.9.0"))
+        testImplementation("org.junit.jupiter:junit-jupiter")
+    }
+    
+    tasks.named<Test>("test") {
+        useJUnitPlatform()
+    }
+""".trimIndent()
