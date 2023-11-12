@@ -10,9 +10,13 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val exporterMode: Property<OpenTelemetryExporterMode>
     abstract val enabled: Property<Boolean>
     abstract val customTags: MapProperty<String, String>
+    abstract val parentSpanIdEnvVarName: Property<String>
+    abstract val parentTraceIdEnvVarName: Property<String>
 
     init {
         exporterMode.convention(OpenTelemetryExporterMode.GRPC)
         enabled.convention(true)
+        parentSpanIdEnvVarName.convention("SPAN_ID")
+        parentTraceIdEnvVarName.convention("TRACE_ID")
     }
 }
