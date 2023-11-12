@@ -70,6 +70,17 @@ And the attributes on the per-test spans are:
 | `test.failure.stacktrace` | If the test failed, abbreviated stack trace of the failure |
 | `task.name`               | Name of the task, e.g. `test` |
 
+### Remote parent trace
+
+Some CI execution systems such as Jenkins have support for creating a trace of the full CI execution,
+where the Gradle build is just part of that whole execution.
+
+Starting with plugin version `1.7.0`, the plugin will auto-detect these remote parent span and trace IDs
+when they are passed in as environment variables and make the Gradle build part of that overall trace.
+
+By default, the plugin uses parent environment variables named `SPAN_ID` and `TRACE_ID` - and those can be configured if
+needed with plugin config parameters `parentSpanIdEnvVarName` and `parentTraceIdEnvVarName`.
+
 ## Usage
 
 ### Add plugin
@@ -78,7 +89,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.6.1"
+    id 'com.atkinsondev.opentelemetry-build' version "1.7.0"
 }
 ```
 
@@ -129,6 +140,7 @@ openTelemetryBuild {
 | exporterMode | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
 | enabled      | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                         |
 | customTags   | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
+| parentSpanIdEnvVarName | `String` | `SPAN_ID` | Environment variable name
 
 ** _Required_
 
@@ -143,6 +155,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.7.0
+  * Adding support for taking in remote parent span and trace IDs from systems like Jenkins for including this plugin's traces as part of an overall part trace
 * 1.6.1
   * Downgrading Kotlin 1.7.10 to match the Kotlin version bundled with Gradle 7.6 ([Gradle compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html#kotlin))
 * 1.6.0

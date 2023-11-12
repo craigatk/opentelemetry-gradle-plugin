@@ -3,9 +3,15 @@ package com.atkinsondev.opentelemetry.build
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.gradleVersionKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.isCIKey
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.projectNameKey
+import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createRemoteSpanContext
+import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createValidSpanId
+import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createdValidTraceId
 import io.opentelemetry.api.baggage.Baggage
+import io.opentelemetry.api.trace.*
+import io.opentelemetry.context.Context
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.logging.Logger
 
 class OpenTelemetryBuildPlugin : Plugin<Project> {
     override fun apply(project: Project) {
@@ -55,6 +61,13 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                             .build()
 
                         val rootSpanName = "${project.name}-build"
+
+                        val parenSpanContext = parentSpanContext(extension, SystemEnvironmentSource(), project.logger)
+
+                        if (parenSpanContext != null) {
+                            Context.root().with(Span.wrap(parenSpanContext))
+                        }
+
                         val rootSpan = tracer.spanBuilder(rootSpanName)
                             .setAttribute("build.task.names", taskNames.joinToString(" "))
                             .addBaggage(baggage)
@@ -85,5 +98,40 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         const val configErrorMessage = "Error reading config for OpenTelemetry build plugin - disabling plugin."
 
         fun isCI(ciEnvVariableName: String): Boolean = System.getenv(ciEnvVariableName) != null
+
+        fun parentSpanContext(extension: OpenTelemetryBuildPluginExtension, environmentSource: EnvironmentSource, logger: Logger): SpanContext? {
+            // Create a parent context passed in from a CI system like Jenkins to tie the Gradle trace
+            // with one created by a parent system.
+            // Ref https://github.com/open-telemetry/opentelemetry-java/discussions/4668
+            if (extension.parentSpanIdEnvVarName.isPresent && extension.parentTraceIdEnvVarName.isPresent) {
+                logger.info(
+                    "Reading parent span ID from environment variable {} and trace ID from environment variable {}",
+                    extension.parentSpanIdEnvVarName.get(),
+                    extension.parentTraceIdEnvVarName.get(),
+                )
+
+                val parentSpanIdStr = environmentSource.getenv(extension.parentSpanIdEnvVarName.get())
+                val parentTraceIdStr = environmentSource.getenv(extension.parentTraceIdEnvVarName.get())
+
+                val parentSpanIdHex = createValidSpanId(parentSpanIdStr)
+                val parentTraceIdHex = createdValidTraceId(parentTraceIdStr)
+
+                if (parentSpanIdHex != null && parentTraceIdHex != null) {
+                    logger.info("Using parent span ID {} and parent trace ID {}", parentSpanIdStr, parentTraceIdStr)
+
+                    return createRemoteSpanContext(parentSpanIdHex, parentTraceIdHex)
+                } else {
+                    if (parentSpanIdHex == null) {
+                        logger.warn("Received invalid parent span ID {}", parentSpanIdStr)
+                    }
+
+                    if (parentTraceIdHex == null) {
+                        logger.warn("Received invalid parent trace ID {}", parentTraceIdStr)
+                    }
+                }
+            }
+
+            return null
+        }
     }
 }
