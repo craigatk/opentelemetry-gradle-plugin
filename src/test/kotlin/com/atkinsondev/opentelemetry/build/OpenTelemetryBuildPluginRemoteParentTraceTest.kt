@@ -46,6 +46,9 @@ class OpenTelemetryBuildPluginRemoteParentTraceTest {
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
+        expectThat(buildResult.output).not().contains("Remote span context is not valid")
+
         expectThat(buildResult.output).contains("Using parent span ID f1a2153e247b0d94 and parent trace ID a263fdf001993a32980b9ec5740b7d6d")
+        expectThat(buildResult.output).contains("OpenTelemetry build trace ID a263fdf001993a32980b9ec5740b7d6d")
     }
 }
