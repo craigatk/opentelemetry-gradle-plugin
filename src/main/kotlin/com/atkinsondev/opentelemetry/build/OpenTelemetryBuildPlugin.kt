@@ -75,7 +75,6 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                             .addBaggage(baggage)
 
                         if (parentContext != null) {
-                            parentContext.makeCurrent()
                             rootSpanBuilder.setParent(parentContext)
                         }
 

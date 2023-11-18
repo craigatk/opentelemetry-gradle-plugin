@@ -15,7 +15,7 @@ class RemoteParentTracerTest {
 
         val spanIdHex = createValidSpanId(spanId)
 
-        expectThat(spanIdHex).isNotNull().isEqualTo("6631613231353365")
+        expectThat(spanIdHex).isNotNull().isEqualTo("f1a2153e247b0d94")
     }
 
     @Test
@@ -42,7 +42,7 @@ class RemoteParentTracerTest {
 
         val traceIdHex = createdValidTraceId(traceId)
 
-        expectThat(traceIdHex).isNotNull().isEqualTo("61323633666466303031393933613332")
+        expectThat(traceIdHex).isNotNull().isEqualTo("a263fdf001993a32980b9ec5740b7d6d")
     }
 
     @Test
