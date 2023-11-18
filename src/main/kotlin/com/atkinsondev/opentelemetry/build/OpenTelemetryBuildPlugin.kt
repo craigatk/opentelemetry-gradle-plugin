@@ -64,14 +64,21 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                         val parenSpanContext = parentSpanContext(extension, SystemEnvironmentSource(), project.logger)
 
-                        if (parenSpanContext != null) {
+                        val parentContext = if (parenSpanContext != null) {
                             Context.root().with(Span.wrap(parenSpanContext))
+                        } else {
+                            null
                         }
 
-                        val rootSpan = tracer.spanBuilder(rootSpanName)
+                        val rootSpanBuilder = tracer.spanBuilder(rootSpanName)
                             .setAttribute("build.task.names", taskNames.joinToString(" "))
                             .addBaggage(baggage)
-                            .startSpan()
+
+                        if (parentContext != null) {
+                            rootSpanBuilder.setParent(parentContext)
+                        }
+
+                        val rootSpan = rootSpanBuilder.startSpan()
 
                         val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
                         project.gradle.addBuildListener(buildListener)
@@ -117,9 +124,15 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                 val parentTraceIdHex = createdValidTraceId(parentTraceIdStr)
 
                 if (parentSpanIdHex != null && parentTraceIdHex != null) {
-                    logger.info("Using parent span ID {} and parent trace ID {}", parentSpanIdStr, parentTraceIdStr)
+                    val remoteSpanContext = createRemoteSpanContext(parentTraceIdHex, parentSpanIdHex)
 
-                    return createRemoteSpanContext(parentSpanIdHex, parentTraceIdHex)
+                    if (remoteSpanContext.isValid) {
+                        logger.info("Using parent span ID {} and parent trace ID {}", parentSpanIdStr, parentTraceIdStr)
+
+                        return remoteSpanContext
+                    } else {
+                        logger.warn("Remote span context is not valid")
+                    }
                 } else {
                     if (parentSpanIdHex == null) {
                         logger.warn("Received invalid parent span ID {}", parentSpanIdStr)

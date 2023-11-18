@@ -289,6 +289,8 @@ class OpenTelemetryBuildPluginTest {
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
+        println(buildResult.output)
+
         await().untilAsserted {
             val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
 
