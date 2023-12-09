@@ -132,15 +132,16 @@ openTelemetryBuild {
 
 #### All configuration options
 
-| Parameter    | Type                        | Default                          | Description                                                                                                                  |
-|--------------|-----------------------------|----------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| endpoint**   | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to                                                                                |
-| headers      | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key                                                              |
-| serviceName  | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds`                         |
-| exporterMode | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
-| enabled      | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                         |
-| customTags   | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
-| parentSpanIdEnvVarName | `String` | `SPAN_ID` | Environment variable name
+| Parameter               | Type                        | Default                          | Description                                                                                                                  |
+|-------------------------|-----------------------------|----------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| endpoint**              | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to                                                                                |
+| headers                 | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key                                                              |
+| serviceName             | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds`                         |
+| exporterMode            | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
+| enabled                 | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                         |
+| customTags              | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
+| parentSpanIdEnvVarName  | `String`                    | `SPAN_ID`                        | Environment variable name for a remote parent span ID (if using a parent trace like the Jenkins OpenTelemetry plugin)        |
+| parentTraceIdEnvVarName | `String`                    | `TRACE_ID`                       | Environment variable name for a remote parent trace ID (if using a parent trace like the Jenkins OpenTelemetry plugin)       |
 
 ** _Required_
 
