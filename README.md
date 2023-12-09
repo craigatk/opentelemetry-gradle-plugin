@@ -89,7 +89,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.8.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.9.0"
 }
 ```
 
@@ -132,15 +132,16 @@ openTelemetryBuild {
 
 #### All configuration options
 
-| Parameter    | Type                        | Default                          | Description                                                                                                                  |
-|--------------|-----------------------------|----------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| endpoint**   | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to                                                                                |
-| headers      | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key                                                              |
-| serviceName  | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds`                         |
-| exporterMode | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
-| enabled      | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                         |
-| customTags   | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
-| parentSpanIdEnvVarName | `String` | `SPAN_ID` | Environment variable name
+| Parameter               | Type                        | Default                          | Description                                                                                                                  |
+|-------------------------|-----------------------------|----------------------------------|------------------------------------------------------------------------------------------------------------------------------|
+| endpoint**              | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to                                                                                |
+| headers                 | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key                                                              |
+| serviceName             | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds`                         |
+| exporterMode            | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
+| enabled                 | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                         |
+| customTags              | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
+| parentSpanIdEnvVarName  | `String`                    | `SPAN_ID`                        | Environment variable name for a remote parent span ID (if using a parent trace like the Jenkins OpenTelemetry plugin)        |
+| parentTraceIdEnvVarName | `String`                    | `TRACE_ID`                       | Environment variable name for a remote parent trace ID (if using a parent trace like the Jenkins OpenTelemetry plugin)       |
 
 ** _Required_
 
@@ -155,6 +156,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.9.0
+  * Upgrading to Gradle 8.5 and Kotlin 1.9.20 ([Gradle/Kotlin compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html#kotlin))
 * 1.8.0
   * Upgrading to OpenTelemetry 1.33.0
 * 1.7.1
