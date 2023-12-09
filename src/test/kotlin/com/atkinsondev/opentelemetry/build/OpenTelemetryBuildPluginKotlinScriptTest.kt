@@ -18,7 +18,7 @@ import java.nio.file.Path
 @WireMockTest
 class OpenTelemetryBuildPluginKotlinScriptTest {
     @ParameterizedTest
-    @ValueSource(strings = ["7.6.3", "8.4"])
+    @ValueSource(strings = ["7.6.3", "8.5"])
     fun `should send data to OpenTelemetry when using a Kotlin build script`(gradleVersion: String, wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
