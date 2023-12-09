@@ -16,7 +16,7 @@ plugins {
 }
 
 group = "com.atkinsondev"
-version = "1.7.1"
+version = "1.8.0"
 
 gradlePlugin {
     website = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
@@ -41,7 +41,7 @@ dependencies {
     implementation("io.opentelemetry:opentelemetry-sdk:$otelVersion")
     implementation("io.opentelemetry:opentelemetry-exporter-otlp:$otelVersion")
     implementation("io.opentelemetry:opentelemetry-exporter-zipkin:$otelVersion")
-    implementation("io.opentelemetry:opentelemetry-semconv:$otelVersion-alpha")
+    implementation("io.opentelemetry:opentelemetry-semconv:$otelSemConvVersion")
 
     testImplementation gradleTestKit()
 
