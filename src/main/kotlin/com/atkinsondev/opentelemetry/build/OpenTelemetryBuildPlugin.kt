@@ -1,8 +1,8 @@
 package com.atkinsondev.opentelemetry.build
 
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.gradleVersionKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.isCIKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.projectNameKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
 import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createRemoteSpanContext
 import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createValidSpanId
 import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createdValidTraceId
@@ -28,51 +28,57 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                 if (endpoint != null) {
                     val serviceName = extension.serviceName.orNull ?: "gradle-builds"
 
-                    val headers: Map<String, String>? = try {
-                        extension.headers.orNull ?: mapOf()
-                    } catch (e: Exception) {
-                        null
-                    }
+                    val headers: Map<String, String>? =
+                        try {
+                            extension.headers.orNull ?: mapOf()
+                        } catch (e: Exception) {
+                            null
+                        }
 
-                    val customTags: Map<String, String>? = try {
-                        extension.customTags.orNull ?: mapOf()
-                    } catch (e: Exception) {
-                        null
-                    }
+                    val customTags: Map<String, String>? =
+                        try {
+                            extension.customTags.orNull ?: mapOf()
+                        } catch (e: Exception) {
+                            null
+                        }
 
                     if (headers != null) {
-                        val openTelemetry = OpenTelemetryInit(project.logger).init(
-                            endpoint = endpoint,
-                            headers = headers,
-                            serviceName = serviceName,
-                            exporterMode = extension.exporterMode.get(),
-                            customTags = customTags.orEmpty(),
-                        )
+                        val openTelemetry =
+                            OpenTelemetryInit(project.logger).init(
+                                endpoint = endpoint,
+                                headers = headers,
+                                serviceName = serviceName,
+                                exporterMode = extension.exporterMode.get(),
+                                customTags = customTags.orEmpty(),
+                            )
 
                         val tracer = openTelemetry.getTracer(serviceName)
 
                         val taskNames = project.gradle.startParameter.taskNames
 
                         // Put the following attributes on all spans
-                        val baggage = Baggage.builder()
-                            .put(projectNameKey, project.name)
-                            .put(gradleVersionKey, project.gradle.gradleVersion)
-                            .put(isCIKey, isCI("CI").toString())
-                            .build()
+                        val baggage =
+                            Baggage.builder()
+                                .put(PROJECT_NAME_KEY, project.name)
+                                .put(GRADLE_VERSION_KEY, project.gradle.gradleVersion)
+                                .put(IS_CI_KEY, isCI("CI").toString())
+                                .build()
 
                         val rootSpanName = "${project.name}-build"
 
                         val parenSpanContext = parentSpanContext(extension, SystemEnvironmentSource(), project.logger)
 
-                        val parentContext = if (parenSpanContext != null) {
-                            Context.root().with(Span.wrap(parenSpanContext))
-                        } else {
-                            null
-                        }
+                        val parentContext =
+                            if (parenSpanContext != null) {
+                                Context.root().with(Span.wrap(parenSpanContext))
+                            } else {
+                                null
+                            }
 
-                        val rootSpanBuilder = tracer.spanBuilder(rootSpanName)
-                            .setAttribute("build.task.names", taskNames.joinToString(" "))
-                            .addBaggage(baggage)
+                        val rootSpanBuilder =
+                            tracer.spanBuilder(rootSpanName)
+                                .setAttribute("build.task.names", taskNames.joinToString(" "))
+                                .addBaggage(baggage)
 
                         if (parentContext != null) {
                             rootSpanBuilder.setParent(parentContext)
@@ -86,27 +92,31 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                         val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, baggage, project.logger)
                         project.gradle.addListener(taskListener)
                     } else {
-                        project.logger.warn(configErrorMessage)
+                        project.logger.warn(CONFIG_ERROR_MESSAGE)
                     }
                 } else {
-                    project.logger.warn(missingEndpointMessage)
+                    project.logger.warn(MISSING_ENDPOINT_MESSAGE)
                 }
             } else {
-                project.logger.info(pluginNotEnabledMessage)
+                project.logger.info(PLUGIN_NOT_ENABLED_MESSAGE)
             }
         }
     }
 
     companion object {
-        const val pluginNotEnabledMessage = "OpenTelemetry build plugin is disabled via configuration."
+        const val PLUGIN_NOT_ENABLED_MESSAGE = "OpenTelemetry build plugin is disabled via configuration."
 
-        const val missingEndpointMessage = """No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file."""
+        const val MISSING_ENDPOINT_MESSAGE = """No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file."""
 
-        const val configErrorMessage = "Error reading config for OpenTelemetry build plugin - disabling plugin."
+        const val CONFIG_ERROR_MESSAGE = "Error reading config for OpenTelemetry build plugin - disabling plugin."
 
         fun isCI(ciEnvVariableName: String): Boolean = System.getenv(ciEnvVariableName) != null
 
-        fun parentSpanContext(extension: OpenTelemetryBuildPluginExtension, environmentSource: EnvironmentSource, logger: Logger): SpanContext? {
+        fun parentSpanContext(
+            extension: OpenTelemetryBuildPluginExtension,
+            environmentSource: EnvironmentSource,
+            logger: Logger,
+        ): SpanContext? {
             // Create a parent context passed in from a CI system like Jenkins to tie the Gradle trace
             // with one created by a parent system.
             // Ref https://github.com/open-telemetry/opentelemetry-java/discussions/4668

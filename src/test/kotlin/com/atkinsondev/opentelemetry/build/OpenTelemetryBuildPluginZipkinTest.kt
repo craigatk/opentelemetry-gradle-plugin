@@ -18,12 +18,15 @@ import java.nio.file.Path
 
 @WireMockTest
 class OpenTelemetryBuildPluginZipkinTest {
-
     @Test
-    fun `should send data to OpenTelemetry with Zipkin`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `should send data to OpenTelemetry with Zipkin`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
@@ -31,7 +34,7 @@ class OpenTelemetryBuildPluginZipkinTest {
                 
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.ZIPKIN
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -40,11 +43,12 @@ class OpenTelemetryBuildPluginZipkinTest {
 
         stubFor(post("/zipkin").willReturn(ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 

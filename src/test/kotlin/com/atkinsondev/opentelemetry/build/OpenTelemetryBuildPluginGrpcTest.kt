@@ -16,18 +16,21 @@ import java.nio.file.Path
 
 @WireMockTest
 class OpenTelemetryBuildPluginGrpcTest {
-
     @Test
-    fun `should send data to OpenTelemetry with GRPC`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `should send data to OpenTelemetry with GRPC`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -36,11 +39,12 @@ class OpenTelemetryBuildPluginGrpcTest {
 
         stubFor(post("/opentelemetry.proto.collector.trace.v1.TraceService/Export").willReturn(ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
