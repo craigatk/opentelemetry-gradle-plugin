@@ -18,19 +18,22 @@ import java.nio.file.Path
 
 @WireMockTest
 class OpenTelemetryBuildPluginPerTestSpanTest {
-
     @Test
-    fun `should send span for passing test`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `should send span for passing test`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -39,11 +42,12 @@ class OpenTelemetryBuildPluginPerTestSpanTest {
 
         stubFor(WireMock.post("/otel").willReturn(ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
@@ -61,17 +65,21 @@ class OpenTelemetryBuildPluginPerTestSpanTest {
     }
 
     @Test
-    fun `should send span for failing test`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `should send span for failing test`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -85,11 +93,12 @@ class OpenTelemetryBuildPluginPerTestSpanTest {
 
         stubFor(WireMock.post("/otel").willReturn(ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .buildAndFail()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .buildAndFail()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.FAILED)
 

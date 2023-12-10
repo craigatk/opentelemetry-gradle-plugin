@@ -16,17 +16,21 @@ import java.nio.file.Path
 @WireMockTest
 class OpenTelemetryBuildPluginRemoteParentTraceTest {
     @Test
-    fun `when valid parent span and trace environment variables set should use them`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `when valid parent span and trace environment variables set should use them`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -35,12 +39,13 @@ class OpenTelemetryBuildPluginRemoteParentTraceTest {
 
         WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withEnvironment(mapOf("SPAN_ID" to "f1a2153e247b0d94", "TRACE_ID" to "a263fdf001993a32980b9ec5740b7d6d"))
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withEnvironment(mapOf("SPAN_ID" to "f1a2153e247b0d94", "TRACE_ID" to "a263fdf001993a32980b9ec5740b7d6d"))
+                .withPluginClasspath()
+                .build()
 
         println(buildResult.output)
 
@@ -48,7 +53,9 @@ class OpenTelemetryBuildPluginRemoteParentTraceTest {
 
         expectThat(buildResult.output).not().contains("Remote span context is not valid")
 
-        expectThat(buildResult.output).contains("Using parent span ID f1a2153e247b0d94 and parent trace ID a263fdf001993a32980b9ec5740b7d6d")
+        expectThat(
+            buildResult.output,
+        ).contains("Using parent span ID f1a2153e247b0d94 and parent trace ID a263fdf001993a32980b9ec5740b7d6d")
         expectThat(buildResult.output).contains("OpenTelemetry build trace ID a263fdf001993a32980b9ec5740b7d6d")
     }
 }

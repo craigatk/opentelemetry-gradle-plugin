@@ -2,25 +2,25 @@ package com.atkinsondev.opentelemetry.build
 
 object OpenTelemetryBuildSpanData {
     // Attributes on all spans
-    const val projectNameKey = "project.name"
-    const val gradleVersionKey = "gradle.version"
-    const val isCIKey = "system.is_ci"
+    const val PROJECT_NAME_KEY = "project.name"
+    const val GRADLE_VERSION_KEY = "gradle.version"
+    const val IS_CI_KEY = "system.is_ci"
 
     // Task attributes
-    const val taskNameKey = "task.name"
-    const val taskPathKey = "task.path"
-    const val taskTypeKey = "task.type"
-    const val taskDidWorkKey = "task.did_work"
-    const val taskOutcomeKey = "task.outcome"
-    const val errorKey = "error"
-    const val taskFailedKey = "task.failed"
-    const val taskFailureKey = "task.failure"
+    const val TASK_NAME_KEY = "task.name"
+    const val TASK_PATH_KEY = "task.path"
+    const val TASK_TYPE_KEY = "task.type"
+    const val TASK_DID_WORK_KEY = "task.did_work"
+    const val TASK_OUTCOME_KEY = "task.outcome"
+    const val ERROR_KEY = "error"
+    const val TASK_FAILED_KEY = "task.failed"
+    const val TASK_FAILURE_KEY = "task.failure"
 
     // Test attributes
-    const val testNameKey = "test.name"
-    const val testResultKey = "test.result"
-    const val failureMessageKey = "test.failure.message"
-    const val failureStacktraceKey = "test.failure.stacktrace"
+    const val TEST_NAME_KEY = "test.name"
+    const val TEST_RESULT_KEY = "test.result"
+    const val FAILURE_MESSAGE_KEY = "test.failure.message"
+    const val FAILURE_STACKTRACE_KEY = "test.failure.stacktrace"
 
-    const val testFailureSpanEventName = "test.failure"
+    const val TEST_FAILURE_SPAN_EVENT_NAME_KEY = "test.failure"
 }

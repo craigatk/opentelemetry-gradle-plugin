@@ -17,32 +17,44 @@ import java.nio.file.Path
 @WireMockTest
 class OpenTelemetryBuildPluginTurnedOffTest {
     @Test
-    fun `when plugin is applied but no endpoint defined should log message and disable plugin`(@TempDir projectRootDirPath: Path) {
-        val buildFileContents = """
+    fun `when plugin is applied but no endpoint defined should log message and disable plugin`(
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
         createSrcDirectoryAndClassFile(projectRootDirPath)
         createTestDirectoryAndClassFile(projectRootDirPath)
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
-        expectThat(buildResult.output).contains("""No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file.""")
+        expectThat(
+            buildResult.output,
+        ).contains(
+            """No OpenTelemetry build endpoint found, disabling plugin. Please add "openTelemetryBuild { endpoint = '<server>' }" to your Gradle build file.""",
+        )
     }
 
     @Test
-    fun `when header config includes null value should disable plugin and log message`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `when header config includes null value should disable plugin and log message`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
@@ -50,7 +62,7 @@ class OpenTelemetryBuildPluginTurnedOffTest {
                 headers = ["foo1": "bar1", "foo2": null]
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -59,11 +71,12 @@ class OpenTelemetryBuildPluginTurnedOffTest {
 
         WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
@@ -73,10 +86,14 @@ class OpenTelemetryBuildPluginTurnedOffTest {
     }
 
     @Test
-    fun `when plugin is disabled should log message`(wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `when plugin is disabled should log message`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
@@ -84,7 +101,7 @@ class OpenTelemetryBuildPluginTurnedOffTest {
                 endpoint = '$wiremockBaseUrl/otel'
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -93,11 +110,12 @@ class OpenTelemetryBuildPluginTurnedOffTest {
 
         WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 

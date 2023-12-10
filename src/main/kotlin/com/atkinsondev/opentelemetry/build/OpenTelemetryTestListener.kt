@@ -1,12 +1,12 @@
 package com.atkinsondev.opentelemetry.build
 
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.errorKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.failureMessageKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.failureStacktraceKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskNameKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.testFailureSpanEventName
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.testNameKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.testResultKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_MESSAGE_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_STACKTRACE_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TEST_FAILURE_SPAN_EVENT_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TEST_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TEST_RESULT_KEY
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.common.AttributeKey.stringKey
 import io.opentelemetry.api.common.Attributes
@@ -34,22 +34,29 @@ class OpenTelemetryTestListener(
 
     override fun beforeSuite(test: TestDescriptor) { }
 
-    override fun afterSuite(test: TestDescriptor, testResult: TestResult) { }
+    override fun afterSuite(
+        test: TestDescriptor,
+        testResult: TestResult,
+    ) { }
 
     override fun beforeTest(test: TestDescriptor) {
         val testKey = testHashKey(test)
 
-        val span = tracer
-            .spanBuilder(fullDisplayName(test))
-            .setParent(Context.current().with(testTaskSpan))
-            .addBaggage(baggage)
-            .startSpan()
-            .setAttribute(taskNameKey, testTaskName)
+        val span =
+            tracer
+                .spanBuilder(fullDisplayName(test))
+                .setParent(Context.current().with(testTaskSpan))
+                .addBaggage(baggage)
+                .startSpan()
+                .setAttribute(TASK_NAME_KEY, testTaskName)
 
         testSpanMap[testKey] = span
     }
 
-    override fun afterTest(test: TestDescriptor, testResult: TestResult) {
+    override fun afterTest(
+        test: TestDescriptor,
+        testResult: TestResult,
+    ) {
         val testKey = testHashKey(test)
 
         val testResultException = testResult.exception
@@ -57,33 +64,37 @@ class OpenTelemetryTestListener(
         if (testResult.resultType == TestResult.ResultType.FAILURE) {
             logger.info("Adding test failure event for test {}", fullDisplayName(test))
 
-            val attributesBuilder = Attributes.builder()
-                .put(stringKey(testNameKey), fullDisplayName(test))
-                .put(stringKey(taskNameKey), testTaskName)
+            val attributesBuilder =
+                Attributes.builder()
+                    .put(stringKey(TEST_NAME_KEY), fullDisplayName(test))
+                    .put(stringKey(TASK_NAME_KEY), testTaskName)
 
             if (testResultException != null) {
-                attributesBuilder.put(stringKey(failureMessageKey), testResultException.message ?: "")
-                attributesBuilder.put(stringKey(failureStacktraceKey), truncatedStackTraceString(testResultException, stackTraceMaxDepth))
+                attributesBuilder.put(stringKey(FAILURE_MESSAGE_KEY), testResultException.message ?: "")
+                attributesBuilder.put(stringKey(FAILURE_STACKTRACE_KEY), truncatedStackTraceString(testResultException, stackTraceMaxDepth))
             }
 
-            testTaskSpan.addEvent(testFailureSpanEventName, attributesBuilder.build())
+            testTaskSpan.addEvent(TEST_FAILURE_SPAN_EVENT_NAME_KEY, attributesBuilder.build())
         }
 
         val span = testSpanMap[testKey]
 
         if (testResultException != null) {
-            span?.setAttribute(errorKey, testResultException.message ?: "")
-            span?.setAttribute(failureMessageKey, testResultException.message ?: "")
-            span?.setAttribute(failureStacktraceKey, truncatedStackTraceString(testResultException, stackTraceMaxDepth))
+            span?.setAttribute(ERROR_KEY, testResultException.message ?: "")
+            span?.setAttribute(FAILURE_MESSAGE_KEY, testResultException.message ?: "")
+            span?.setAttribute(FAILURE_STACKTRACE_KEY, truncatedStackTraceString(testResultException, stackTraceMaxDepth))
         }
 
-        span?.setAttribute(testResultKey, testResult.resultType.name)
+        span?.setAttribute(TEST_RESULT_KEY, testResult.resultType.name)
 
         span?.end()
     }
 
     companion object {
-        fun truncatedStackTraceString(t: Throwable, maxDepth: Int): String {
+        fun truncatedStackTraceString(
+            t: Throwable,
+            maxDepth: Int,
+        ): String {
             val stackTraceElements = t.stackTrace.toList()
             t.stackTraceToString()
             val stackTraceElementsToInclude = stackTraceElements.subList(0, min(stackTraceElements.size, maxDepth))

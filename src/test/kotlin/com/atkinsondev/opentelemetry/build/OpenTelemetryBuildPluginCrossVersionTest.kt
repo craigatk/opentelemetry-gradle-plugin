@@ -17,20 +17,24 @@ import java.nio.file.Path
 
 @WireMockTest
 class OpenTelemetryBuildPluginCrossVersionTest {
-
     @ParameterizedTest
     @ValueSource(strings = ["6.1.1", "6.9.1", "7.0", "7.6.3", "8.4", "8.5"])
-    fun `should send data to OpenTelemetry with HTTP with different Gradle versions`(gradleVersion: String, wmRuntimeInfo: WireMockRuntimeInfo, @TempDir projectRootDirPath: Path) {
+    fun `should send data to OpenTelemetry with HTTP with different Gradle versions`(
+        gradleVersion: String,
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
         val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
 
-        val buildFileContents = """
+        val buildFileContents =
+            """
             ${baseBuildFileContents()}
             
             openTelemetryBuild {
                 endpoint = '$wiremockBaseUrl/otel'
                 exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
             }
-        """.trimIndent()
+            """.trimIndent()
 
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
@@ -39,12 +43,13 @@ class OpenTelemetryBuildPluginCrossVersionTest {
 
         stubFor(post("/otel").willReturn(ok()))
 
-        val buildResult = GradleRunner.create()
-            .withProjectDir(projectRootDirPath.toFile())
-            .withArguments("test", "--info", "--stacktrace")
-            .withGradleVersion(gradleVersion)
-            .withPluginClasspath()
-            .build()
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withGradleVersion(gradleVersion)
+                .withPluginClasspath()
+                .build()
 
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 

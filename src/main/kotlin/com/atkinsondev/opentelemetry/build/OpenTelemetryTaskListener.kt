@@ -1,13 +1,13 @@
 package com.atkinsondev.opentelemetry.build
 
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.errorKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskDidWorkKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailedKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskFailureKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskNameKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskOutcomeKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskPathKey
-import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.taskTypeKey
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_DID_WORK_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILED_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILURE_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_OUTCOME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_PATH_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_TYPE_KEY
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
@@ -31,43 +31,48 @@ class OpenTelemetryTaskListener(
     override fun beforeExecute(task: Task) {
         val taskKey = taskHashKey(task)
 
-        val span = tracer
-            .spanBuilder(taskKey)
-            .setParent(Context.current().with(rootSpan))
-            .addBaggage(baggage)
-            .startSpan()
-            .setAttribute(taskNameKey, task.name)
-            .setAttribute(taskPathKey, task.path)
-            .setAttribute(taskTypeKey, task.javaClass.name.replace("_Decorated", ""))
+        val span =
+            tracer
+                .spanBuilder(taskKey)
+                .setParent(Context.current().with(rootSpan))
+                .addBaggage(baggage)
+                .startSpan()
+                .setAttribute(TASK_NAME_KEY, task.name)
+                .setAttribute(TASK_PATH_KEY, task.path)
+                .setAttribute(TASK_TYPE_KEY, task.javaClass.name.replace("_Decorated", ""))
 
         if (task is Test) {
-            val testListener = OpenTelemetryTestListener(
-                tracer = tracer,
-                testTaskSpan = span,
-                baggage = baggage,
-                testTaskName = task.name,
-                logger = logger,
-            )
+            val testListener =
+                OpenTelemetryTestListener(
+                    tracer = tracer,
+                    testTaskSpan = span,
+                    baggage = baggage,
+                    testTaskName = task.name,
+                    logger = logger,
+                )
             task.addTestListener(testListener)
         }
 
         taskSpanMap[taskKey] = span
     }
 
-    override fun afterExecute(task: Task, taskState: TaskState) {
+    override fun afterExecute(
+        task: Task,
+        taskState: TaskState,
+    ) {
         val taskKey = taskHashKey(task)
 
         val span = taskSpanMap[taskKey]
 
-        span?.setAttribute(taskDidWorkKey, taskState.didWork)
+        span?.setAttribute(TASK_DID_WORK_KEY, taskState.didWork)
 
         if (taskState is TaskStateInternal) {
-            span?.setAttribute(taskOutcomeKey, taskState.outcome.toString())
+            span?.setAttribute(TASK_OUTCOME_KEY, taskState.outcome.toString())
 
             if (taskState.failure != null) {
-                span?.setAttribute(errorKey, taskState.failure?.message ?: "")
-                span?.setAttribute(taskFailedKey, true)
-                span?.setAttribute(taskFailureKey, taskState.failure?.message ?: "")
+                span?.setAttribute(ERROR_KEY, taskState.failure?.message ?: "")
+                span?.setAttribute(TASK_FAILED_KEY, true)
+                span?.setAttribute(TASK_FAILURE_KEY, taskState.failure?.message ?: "")
             }
         }
 

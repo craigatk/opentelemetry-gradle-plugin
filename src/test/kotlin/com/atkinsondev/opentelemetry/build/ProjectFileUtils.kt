@@ -9,9 +9,10 @@ import kotlin.io.path.createDirectories
 fun createSrcDirectoryAndClassFile(projectRootDirPath: Path) {
     val srcPath = Paths.get(projectRootDirPath.absolutePathString(), "src/main/kotlin").createDirectories()
 
-    val sourceFileContents = """
-            fun foo() = "bar"
-    """.trimIndent()
+    val sourceFileContents =
+        """
+        fun foo() = "bar"
+        """.trimIndent()
 
     File(srcPath.toFile(), "foo.kt").writeText(sourceFileContents)
 }
@@ -19,16 +20,17 @@ fun createSrcDirectoryAndClassFile(projectRootDirPath: Path) {
 fun createTestDirectoryAndClassFile(projectRootDirPath: Path) {
     val testPath = Paths.get(projectRootDirPath.absolutePathString(), "src/test/kotlin").createDirectories()
 
-    val testFileContents = """
-            import org.junit.jupiter.api.Test
-            
-            class FooTest {
-                @Test
-                fun `foo should return bar`() {
-                    assert(foo() == "bar")
-                }
+    val testFileContents =
+        """
+        import org.junit.jupiter.api.Test
+        
+        class FooTest {
+            @Test
+            fun `foo should return bar`() {
+                assert(foo() == "bar")
             }
-    """.trimIndent()
+        }
+        """.trimIndent()
 
     File(testPath.toFile(), "FooTest.kt").writeText(testFileContents)
 }
@@ -36,21 +38,23 @@ fun createTestDirectoryAndClassFile(projectRootDirPath: Path) {
 fun createTestDirectoryAndFailingClassFile(projectRootDirPath: Path) {
     val testPath = Paths.get(projectRootDirPath.absolutePathString(), "src/test/kotlin").createDirectories()
 
-    val testFileContents = """
-            import org.junit.jupiter.api.Test
-            
-            class FooTest {
-                @Test
-                fun `foo should return bar but will fail`() {
-                    assert(foo() == "baz")
-                }
+    val testFileContents =
+        """
+        import org.junit.jupiter.api.Test
+        
+        class FooTest {
+            @Test
+            fun `foo should return bar but will fail`() {
+                assert(foo() == "baz")
             }
-    """.trimIndent()
+        }
+        """.trimIndent()
 
     File(testPath.toFile(), "FooTest.kt").writeText(testFileContents)
 }
 
-fun baseBuildFileContents(): String = """
+fun baseBuildFileContents(): String =
+    """
     buildscript {
         repositories {
             gradlePluginPortal()
@@ -75,9 +79,10 @@ fun baseBuildFileContents(): String = """
     test {
         useJUnitPlatform()
     }
-""".trimIndent()
+    """.trimIndent()
 
-fun baseKotlinBuildFileContents(): String = """
+fun baseKotlinBuildFileContents(): String =
+    """
     buildscript {
         repositories {
             mavenCentral()
@@ -101,4 +106,4 @@ fun baseKotlinBuildFileContents(): String = """
     tasks.named<Test>("test") {
         useJUnitPlatform()
     }
-""".trimIndent()
+    """.trimIndent()
