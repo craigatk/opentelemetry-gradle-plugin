@@ -45,7 +45,7 @@ dependencies {
 
     testImplementation gradleTestKit()
 
-    testImplementation(platform("org.junit:junit-bom:5.10.1"))
+    testImplementation(platform("org.junit:junit-bom:5.10.2"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
     testImplementation "org.wiremock:wiremock:3.4.2"
