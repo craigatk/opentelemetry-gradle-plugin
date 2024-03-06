@@ -64,7 +64,7 @@ class OpenTelemetryTaskListener(
 
         val span = taskSpanMap[taskKey]
 
-        span?.setAttribute(TASK_DID_WORK_KEY, taskState.didWork)
+        span?.setAttribute(TASK_DID_WORK_KEY, taskState.didWork.toString())
 
         if (taskState is TaskStateInternal) {
             span?.setAttribute(TASK_OUTCOME_KEY, taskState.outcome.toString())
