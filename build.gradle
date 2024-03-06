@@ -48,7 +48,7 @@ dependencies {
     testImplementation(platform("org.junit:junit-bom:5.10.1"))
     testImplementation("org.junit.jupiter:junit-jupiter")
 
-    testImplementation "org.wiremock:wiremock:3.3.1"
+    testImplementation "org.wiremock:wiremock:3.4.2"
 
     testImplementation("io.strikt:strikt-core:0.34.1")
 
