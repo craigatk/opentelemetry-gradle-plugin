@@ -141,16 +141,16 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                         return remoteSpanContext
                     } else {
-                        logger.warn("Remote span context is not valid")
+                        logger.warn("Remote span context is not valid. Parent span ID: {} - parent trace ID: {}", parentSpanIdStr, parentTraceIdStr)
                     }
-                } else {
-                    if (parentSpanIdHex == null) {
-                        logger.warn("Received invalid parent span ID {}", parentSpanIdStr)
-                    }
+                }
 
-                    if (parentTraceIdHex == null) {
-                        logger.warn("Received invalid parent trace ID {}", parentTraceIdStr)
-                    }
+                if (parentSpanIdStr != null && parentSpanIdHex == null) {
+                    logger.info("Received invalid parent span ID {}", parentSpanIdStr)
+                }
+
+                if (parentTraceIdStr != null && parentTraceIdHex == null) {
+                    logger.info("Received invalid parent trace ID {}", parentTraceIdStr)
                 }
             }
 

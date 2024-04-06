@@ -1,6 +1,7 @@
 package com.atkinsondev.opentelemetry.build
 
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_MESSAGE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_MESSAGE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_STACKTRACE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_KEY
@@ -80,7 +81,8 @@ class OpenTelemetryTestListener(
         val span = testSpanMap[testKey]
 
         if (testResultException != null) {
-            span?.setAttribute(ERROR_KEY, testResultException.message ?: "")
+            span?.setAttribute(ERROR_KEY, true)
+            span?.setAttribute(ERROR_MESSAGE_KEY, testResultException.message ?: "")
             span?.setAttribute(FAILURE_MESSAGE_KEY, testResultException.message ?: "")
             span?.setAttribute(FAILURE_STACKTRACE_KEY, truncatedStackTraceString(testResultException, stackTraceMaxDepth))
         }

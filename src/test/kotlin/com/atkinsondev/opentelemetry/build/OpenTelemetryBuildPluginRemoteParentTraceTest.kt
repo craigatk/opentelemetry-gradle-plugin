@@ -58,4 +58,43 @@ class OpenTelemetryBuildPluginRemoteParentTraceTest {
         ).contains("Using parent span ID f1a2153e247b0d94 and parent trace ID a263fdf001993a32980b9ec5740b7d6d")
         expectThat(buildResult.output).contains("OpenTelemetry build trace ID a263fdf001993a32980b9ec5740b7d6d")
     }
+
+    @Test
+    fun `when no parent trace or span should not log invalid-parent error message`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+            
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
+
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
+
+        println(buildResult.output)
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        expectThat(buildResult.output).not().contains("Received invalid parent span ID")
+        expectThat(buildResult.output).not().contains("Received invalid parent trace ID")
+    }
 }

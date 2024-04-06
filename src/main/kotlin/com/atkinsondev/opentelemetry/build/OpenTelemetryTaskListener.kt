@@ -1,6 +1,7 @@
 package com.atkinsondev.opentelemetry.build
 
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_MESSAGE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_DID_WORK_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILED_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILURE_KEY
@@ -70,7 +71,8 @@ class OpenTelemetryTaskListener(
             span?.setAttribute(TASK_OUTCOME_KEY, taskState.outcome.toString())
 
             if (taskState.failure != null) {
-                span?.setAttribute(ERROR_KEY, taskState.failure?.message ?: "")
+                span?.setAttribute(ERROR_KEY, true)
+                span?.setAttribute(ERROR_MESSAGE_KEY, taskState.failure?.message ?: "")
                 span?.setAttribute(TASK_FAILED_KEY, true)
                 span?.setAttribute(TASK_FAILURE_KEY, taskState.failure?.message ?: "")
             }
