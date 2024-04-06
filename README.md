@@ -47,28 +47,30 @@ Each task has a child span created from the root build.
 The task spans are named with the task path, for example `:test`
 And each task span has the following attributes:
 
-| Span attribute name | Description |
-| ------------------- | ----------- |
-| `task.name`         | Name of the task, e.g. `test` |
-| `task.path`         | Full path to the task, including subproject names. E.g. `:app:test` |
-| `task.type`         | Full package and class name of the task, e.g. `org.gradle.api.tasks.testing.Test`
-| `task.outcome`      | Outcome of the task, e.g. `SUCCESS`, `UP-TO-DATE`, or `FROM-CACHE` |
-| `task.did_work`     | Whether the task did work (boolean) |
-| `error`             | If the task failed, the failure message |
-| `task.failed`       | Set to `true` if the task failed |
-| `task.failure`      | If the task failed, the failure message |
+| Span attribute name | Description                                                                       |
+|---------------------|-----------------------------------------------------------------------------------|
+| `task.name`         | Name of the task, e.g. `test`                                                     |
+| `task.path`         | Full path to the task, including subproject names. E.g. `:app:test`               |
+| `task.type`         | Full package and class name of the task, e.g. `org.gradle.api.tasks.testing.Test` |
+| `task.outcome`      | Outcome of the task, e.g. `SUCCESS`, `UP-TO-DATE`, or `FROM-CACHE`                |
+| `task.did_work`     | Whether the task did work (boolean)                                               |
+| `error`             | `true` if the task failed                                                         |
+| `error_message`     | If the task failed, the failure message                                           |
+| `task.failed`       | Set to `true` if the task failed                                                  |
+| `task.failure`      | If the task failed, the failure message                                           |
 
 And finally the plugin creates a child span off each `Test` type task for each test executed.
 The name of the per-test span is the full name of the test method.
 And the attributes on the per-test spans are:
 
-| Span attribute name       | Description |
-| ------------------------- | ----------- |
-| `test.result`             | Result of the test, e.g. `SUCCESS` or `FAILURE`
-| `error`                   | If the test failed, the failure message |
-| `test.failure.message`    | If the test failed, the failure message |
+| Span attribute name       | Description                                                |
+|---------------------------|------------------------------------------------------------|
+| `test.result`             | Result of the test, e.g. `SUCCESS` or `FAILURE`            |
+| `error`                   | `true` if the test failed                                  |
+| `error_message`           | If the test failed, the failure message                    |
+| `test.failure.message`    | If the test failed, the failure message                    |
 | `test.failure.stacktrace` | If the test failed, abbreviated stack trace of the failure |
-| `task.name`               | Name of the task, e.g. `test` |
+| `task.name`               | Name of the task, e.g. `test`                              |
 
 ### Remote parent trace
 
@@ -89,7 +91,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.9.1"
+    id 'com.atkinsondev.opentelemetry-build' version "1.10.0"
 }
 ```
 
@@ -156,6 +158,10 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.10.0
+  * Moving the error message string to the `error_message` attribute and making `error` be a boolean to render errors correctly in the Jaeger UI
+  * Fixed problem where invalid parent span/trace ID error messages were logged when no parent or span IDs were set
+  * Updating to OpenTelemetry 1.36.0, Gradle 8.7, and Kotlin 1.9.22
 * 1.9.1
   * Fixing version in user-agent string
 * 1.9.0
@@ -169,8 +175,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 * 1.6.1
   * Downgrading Kotlin 1.7.10 to match the Kotlin version bundled with Gradle 7.6 ([Gradle compatibility matrix](https://docs.gradle.org/current/userguide/compatibility.html#kotlin))
 * 1.6.0
-  * Adding support for custom telemetry attributes (thanks @kpriemchenko !) 
-  * Upgrading to OpenTelemetry 1.29.0 and Kotlin 1.9.0 
+  * Adding support for custom telemetry attributes (thanks @kpriemchenko !)
+  * Upgrading to OpenTelemetry 1.29.0 and Kotlin 1.9.0
 * 1.5.0
   * Upgrading to OpenTelemetry 1.22.0 and Kotlin 1.8.0
 * 1.4.0
