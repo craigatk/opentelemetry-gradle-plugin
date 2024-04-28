@@ -14,7 +14,7 @@ object RemoteParentTracer {
         SpanContext.createFromRemoteParent(
             parentTraceIdHex,
             parentSpanIdHex,
-            TraceFlags.getDefault(),
+            TraceFlags.getSampled(),
             TraceState.builder().build(),
         )
 }
