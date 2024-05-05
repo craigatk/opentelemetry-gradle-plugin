@@ -158,6 +158,8 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 ## Changelog
 
+* 1.12.0
+  * Fix for publishing traces when parent trace information is present
 * 1.10.0
   * Moving the error message string to the `error_message` attribute and making `error` be a boolean to render errors correctly in the Jaeger UI
   * Fixed problem where invalid parent span/trace ID error messages were logged when no parent or span IDs were set
