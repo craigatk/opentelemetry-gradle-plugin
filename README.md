@@ -30,17 +30,17 @@ The plugin adds the following attributes to the different spans it creates.
 Root build span is named `${project.name}-build`, for example this plugin's root span is named `opentelemetry-gradle-plugin-build`
 And the root span has the following attributes:
 
-| Span attribute name | Description |
-| ------------------- | ----------- |
+| Span attribute name | Description                                                                                                                                  |
+|---------------------|----------------------------------------------------------------------------------------------------------------------------------------------|
 | `build.task.names`  | Tasks included in the Gradle command that ran the build. For example, if you ran `./gradlew test build` this attribute would be "test build" |
-| `build.success`     | Whether the build succeeded or failed (boolean) |
+| `build.success`     | Whether the build succeeded or failed (boolean)                                                                                              |
 
 All spans (root span, task spans, etc.) have the following attributes:
 
-| Span attribute name | Description |
-| ------------------- | ----------- |
-| `project.name`      | Name of the Gradle project |
-| `gradle.version`    | Version of Gradle used to run the build |
+| Span attribute name | Description                                                                                                |
+|---------------------|------------------------------------------------------------------------------------------------------------|
+| `project.name`      | Name of the Gradle project                                                                                 |
+| `gradle.version`    | Version of Gradle used to run the build                                                                    |
 | `system.is_ci`      | Whether the build was run in a CI environment or not (checks for existence of a `CI` environment variable) |
 
 Each task has a child span created from the root build.
@@ -89,9 +89,9 @@ needed with plugin config parameters `parentSpanIdEnvVarName` and `parentTraceId
 
 To start using the plugin, first add the plugin to the `plugins` block in your `build.gradle` file:
 
-```
+```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.10.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.12.0"
 }
 ```
 
@@ -103,7 +103,7 @@ Then add a `openTelemetryBuild` block to your `build.gradle` file.
 
 The only required configuration parameter is the server endpoint to send the OpenTelemetry data to.
 
-```
+```groovy
 openTelemetryBuild {
     endpoint = "https://<opentelemetry-server-domain>"
 }
@@ -111,7 +111,7 @@ openTelemetryBuild {
 
 You can also add a map of headers to the data send to the OpenTelemetry server. Adding headers can be useful for passing things like an API key for authentication:
 
-```
+```groovy
 openTelemetryBuild {
     endpoint = "https://<opentelemetry-server-domain>"
     headers = ["X-API-Key": "<my-api-key>"]
@@ -124,7 +124,7 @@ In addition to the standard gRPC or HTTP OpenTelemetry exporters, the plugin sup
 
 To export to Zipkin, set the `exporterMode` plugin configuration parameter to `OpenTelemetryExporterMode.ZIPKIN` and set the `endpoint` to be your Zipkin server API endpoint, similar to the following:
 
-```
+```groovy
 openTelemetryBuild {
     endpoint = "https://yourzipkinserver.com/api/v2/spans"
     serviceName = "appname-build"
@@ -154,7 +154,44 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 ### Limitations
 
 * Incompatible with the configuration cache. This plugin uses a `BuildListener.buildFinished` event, which isn't compatible with the configuration cache
-* Uses Gradle plugin capabilities that are slated to be deprecated in Gradle 8, such as `BuildListener` and `TaskListener`
+
+## Examples
+
+### Jaeger
+
+Example of running a Jaeger instance locally and publishing build traces to it:
+
+Run Jaegar via Docker and enable the OpenTelemetry collector with `COLLECTOR_OTLP_ENABLED=true`:
+
+```
+docker run --name jaeger \
+  -e COLLECTOR_OTLP_ENABLED=true \
+  -p 16686:16686 \
+  -p 4317:4317 \
+  -p 4318:4318 \
+  jaegertracing/all-in-one:1.57
+```
+
+Configure the plugin in `build.gradle` to point at the gRPC endpoint running on port `4317` in the local Jaegar instance:
+
+```groovy
+plugins {
+  id 'com.atkinsondev.opentelemetry-build' version "1.12.0"
+}
+
+openTelemetryBuild {
+    endpoint = "http://localhost:4317"
+}
+```
+
+Then to view the build traces in your local Jaegar instance:
+
+1. Go to the Jaegar UI that is running on http://localhost:16686
+2. Select the service "gradle-builds"
+3. Click "Find Traces"
+4. Select one of the traces
+
+![Jaegar trace](img/jaegar-trace.png "Jaegar trace")
 
 ## Changelog
 
