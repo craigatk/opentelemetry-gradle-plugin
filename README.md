@@ -77,7 +77,7 @@ And the attributes on the per-test spans are:
 Some CI execution systems such as Jenkins have support for creating a trace of the full CI execution,
 where the Gradle build is just part of that whole execution.
 
-Starting with plugin version `1.7.1`, the plugin will auto-detect these remote parent span and trace IDs
+Starting with plugin version `1.12.0`, the plugin will auto-detect these remote parent span and trace IDs
 when they are passed in as environment variables and make the Gradle build part of that overall trace.
 
 By default, the plugin uses parent environment variables named `SPAN_ID` and `TRACE_ID` - and those can be configured if
