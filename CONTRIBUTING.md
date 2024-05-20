@@ -8,3 +8,9 @@ But if it's a larger feature, please first [open an issue](https://github.com/cr
 With some upfront discussion we can reduce any potential risk of redesign/rework after you've already put in the work to make the large changes.
 
 Thanks!
+
+## Before pull request
+
+Before submitting a pull request, please run `./gradlew check` to ensure the linting and tests pass.
+
+Also, if you run into formatting validation failures you can run `./gradlew ktlintFormat` to automatically fix them.
