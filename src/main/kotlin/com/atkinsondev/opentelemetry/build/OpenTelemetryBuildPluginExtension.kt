@@ -12,11 +12,13 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val customTags: MapProperty<String, String>
     abstract val parentSpanIdEnvVarName: Property<String>
     abstract val parentTraceIdEnvVarName: Property<String>
+    abstract val nestedTestSpans: Property<Boolean>
 
     init {
         exporterMode.convention(OpenTelemetryExporterMode.GRPC)
         enabled.convention(true)
         parentSpanIdEnvVarName.convention("SPAN_ID")
         parentTraceIdEnvVarName.convention("TRACE_ID")
+        nestedTestSpans.convention(true)
     }
 }

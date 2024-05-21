@@ -26,6 +26,7 @@ class OpenTelemetryTaskListener(
     private val rootSpan: Span,
     private val baggage: Baggage,
     private val logger: Logger,
+    private val nestedTestSpans: Boolean,
 ) : TaskExecutionListener {
     private val taskSpanMap = ConcurrentHashMap<String, Span>()
 
@@ -50,6 +51,7 @@ class OpenTelemetryTaskListener(
                     baggage = baggage,
                     testTaskName = task.name,
                     logger = logger,
+                    nestedTestSpans = nestedTestSpans,
                 )
             task.addTestListener(testListener)
         }

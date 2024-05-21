@@ -31,6 +31,7 @@ class OpenTelemetryTaskListenerTest {
                 rootSpan = rootSpan,
                 baggage = Baggage.builder().build(),
                 logger = NoopLogger(),
+                nestedTestSpans = false,
             )
 
         val testTask = mockk<org.gradle.api.tasks.testing.Test>(relaxed = true)
@@ -66,6 +67,7 @@ class OpenTelemetryTaskListenerTest {
                 rootSpan = rootSpan,
                 baggage = Baggage.builder().build(),
                 logger = NoopLogger(),
+                nestedTestSpans = false,
             )
 
         val testTask = mockk<org.gradle.api.tasks.testing.Test>(relaxed = true)
