@@ -74,9 +74,9 @@ projektor {
 }
 
 openTelemetryBuild {
-    endpoint = System.getenv("OTEL_ENDPOINT") ?: "https://api.honeycomb.io"
+    endpoint = System.getenv("OTEL_BUILD_ENDPOINT") ?: project.findProperty('otel_build_endpoint') ?: "https://api.honeycomb.io"
     headers = [
-            "x-honeycomb-team": System.getenv("HONEYCOMB_API_KEY") ?: project.findProperty('honeycomb_api_key') ?: null,
+            "x-honeycomb-team": System.getenv("HONEYCOMB_API_KEY") ?: project.findProperty('honeycomb_api_key') ?: "",
             "x-honeycomb-dataset": "otel-gradle"
     ]
 }
