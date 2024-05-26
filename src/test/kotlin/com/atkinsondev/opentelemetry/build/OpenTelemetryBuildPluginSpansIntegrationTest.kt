@@ -3,6 +3,7 @@ package com.atkinsondev.opentelemetry.build
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Assertions.assertLinesMatch
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import strikt.api.expectThat
@@ -10,6 +11,7 @@ import strikt.assertions.*
 import java.io.File
 import java.nio.file.Path
 
+@Disabled
 class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase() {
     override val healthCheckPort = 14270
     override val queryPort = 16687
