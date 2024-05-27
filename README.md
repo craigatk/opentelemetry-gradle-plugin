@@ -196,6 +196,8 @@ Then to view the build traces in your local Jaegar instance:
 
 ## Changelog
 
+* 1.13.0
+  * Adding support for nested test spans in new parameter `nestedTestSpans` which defaults to `true`
 * 1.12.0
   * Fix for publishing traces when parent trace information is present
 * 1.10.0
