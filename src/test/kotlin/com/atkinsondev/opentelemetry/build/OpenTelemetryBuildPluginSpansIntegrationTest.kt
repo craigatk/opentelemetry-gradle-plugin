@@ -60,6 +60,60 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
                 "> :compileTestJava",
                 "> :testClasses",
                 "> :test",
+                ">> Gradle Test Executor \\d",
+                ">>> FooTest",
+                ">>>> foo should return bar()",
+            ),
+            orderedSpansNamesWithDepth,
+        )
+    }
+
+    @Test
+    fun `check spans test not nested`(
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
+                nestedTestSpans = false
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        // Parse trace ID from build output
+        val traceId = Regex("OpenTelemetry build trace ID (\\w+)").find(buildResult.output)!!.groupValues[1]
+
+        val orderedSpansNamesWithDepth = fetchSpansWithDepth(traceId)
+
+        // Use assertLinesMatch, as it has nice support for regexes
+        assertLinesMatch(
+            listOf(
+                " junit\\d+-build",
+                "> :compileKotlin",
+                "> :processResources",
+                "> :processTestResources",
+                "> :compileJava",
+                "> :classes",
+                "> :compileTestKotlin",
+                "> :compileTestJava",
+                "> :testClasses",
+                "> :test",
                 ">> FooTest foo should return bar()",
             ),
             orderedSpansNamesWithDepth,

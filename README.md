@@ -144,6 +144,7 @@ openTelemetryBuild {
 | customTags              | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
 | parentSpanIdEnvVarName  | `String`                    | `SPAN_ID`                        | Environment variable name for a remote parent span ID (if using a parent trace like the Jenkins OpenTelemetry plugin)        |
 | parentTraceIdEnvVarName | `String`                    | `TRACE_ID`                       | Environment variable name for a remote parent trace ID (if using a parent trace like the Jenkins OpenTelemetry plugin)       |
+| nestedTestSpans         | `Boolean`                   | `true`                           | Whether test spans should be nested (per test executor, per test class, per method) or flat (just per test method)           |
 
 ** _Required_
 

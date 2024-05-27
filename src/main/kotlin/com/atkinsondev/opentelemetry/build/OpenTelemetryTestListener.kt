@@ -14,7 +14,6 @@ import io.opentelemetry.api.common.Attributes
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
-import org.gradle.api.internal.tasks.testing.AbstractTestDescriptor
 import org.gradle.api.logging.Logger
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
@@ -28,38 +27,38 @@ class OpenTelemetryTestListener(
     private val baggage: Baggage,
     private val testTaskName: String,
     private val logger: Logger,
+    private val nestedTestSpans: Boolean,
 ) : TestListener {
     private val stackTraceMaxDepth = 5
 
-    private val testSpanMap = ConcurrentHashMap<String, Span>()
+    private val testSpanMap = ConcurrentHashMap<TestDescriptor, Span>()
 
-    override fun beforeSuite(test: TestDescriptor) { }
+    // 1: <gradle test task> (DecoratingTestDescriptor -> TestMainAction$RootTestSuiteDescriptor)
+    //    => We already start a span in OpenTelemetryTaskListener, ignore
+    // 2: <gradle test worker> (DecoratingTestDescriptor -> WorkerTestClassProcessor$WorkerTestSuiteDescriptor)
+    // 3: <test class> (DecoratingTestDescriptor -> DefaultTestClassDescriptor)
+    override fun beforeSuite(test: TestDescriptor) {
+        // test.parent != null: ignore TestMainAction$RootTestSuiteDescriptor
+        if (test.parent != null && nestedTestSpans) {
+            startSpan(test)
+        }
+    }
 
     override fun afterSuite(
         test: TestDescriptor,
         testResult: TestResult,
-    ) { }
+    ) {
+        testSpanMap.remove(test)?.end()
+    }
 
     override fun beforeTest(test: TestDescriptor) {
-        val testKey = testHashKey(test)
-
-        val span =
-            tracer
-                .spanBuilder(fullDisplayName(test))
-                .setParent(Context.current().with(testTaskSpan))
-                .addBaggage(baggage)
-                .startSpan()
-                .setAttribute(TASK_NAME_KEY, testTaskName)
-
-        testSpanMap[testKey] = span
+        startSpan(test)
     }
 
     override fun afterTest(
         test: TestDescriptor,
         testResult: TestResult,
     ) {
-        val testKey = testHashKey(test)
-
         val testResultException = testResult.exception
 
         if (testResult.resultType == TestResult.ResultType.FAILURE) {
@@ -78,7 +77,7 @@ class OpenTelemetryTestListener(
             testTaskSpan.addEvent(TEST_FAILURE_SPAN_EVENT_NAME_KEY, attributesBuilder.build())
         }
 
-        val span = testSpanMap[testKey]
+        val span = testSpanMap.remove(test)
 
         if (testResultException != null) {
             span?.setAttribute(ERROR_KEY, true)
@@ -92,6 +91,30 @@ class OpenTelemetryTestListener(
         span?.end()
     }
 
+    private fun startSpan(test: TestDescriptor): Span {
+        val parentSpan = test.parent?.let { testSpanMap[it] } ?: testTaskSpan
+        val span =
+            tracer
+                .spanBuilder(fullDisplayName(test))
+                .setParent(Context.current().with(parentSpan))
+                .addBaggage(baggage)
+                .startSpan()
+                .setAttribute(TASK_NAME_KEY, testTaskName)
+        testSpanMap[test] = span
+        return span
+    }
+
+    private fun fullDisplayName(test: TestDescriptor): String =
+        if (nestedTestSpans) {
+            test.displayName
+        } else {
+            if (test.parent != null) {
+                "${test.parent?.displayName} ${test.displayName}"
+            } else {
+                test.displayName
+            }
+        }
+
     companion object {
         fun truncatedStackTraceString(
             t: Throwable,
@@ -104,20 +127,5 @@ class OpenTelemetryTestListener(
 
             return stackTraceString
         }
-
-        fun testHashKey(test: TestDescriptor): String {
-            return if (test is AbstractTestDescriptor) {
-                test.id.toString()
-            } else {
-                test.displayName
-            }
-        }
-
-        fun fullDisplayName(test: TestDescriptor): String =
-            if (test.parent != null) {
-                "${test.parent?.displayName} ${test.displayName}"
-            } else {
-                test.displayName
-            }
     }
 }

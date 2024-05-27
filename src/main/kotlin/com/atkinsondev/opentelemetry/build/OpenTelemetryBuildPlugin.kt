@@ -89,7 +89,14 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                         val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
                         project.gradle.addBuildListener(buildListener)
 
-                        val taskListener = OpenTelemetryTaskListener(tracer, rootSpan, baggage, project.logger)
+                        val taskListener =
+                            OpenTelemetryTaskListener(
+                                tracer = tracer,
+                                rootSpan = rootSpan,
+                                baggage = baggage,
+                                logger = project.logger,
+                                nestedTestSpans = extension.nestedTestSpans.get(),
+                            )
                         project.gradle.addListener(taskListener)
                     } else {
                         project.logger.warn(CONFIG_ERROR_MESSAGE)

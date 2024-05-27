@@ -35,6 +35,7 @@ class OpenTelemetryTestListenerTest {
                 baggage = Baggage.builder().build(),
                 testTaskName = "test",
                 logger = NoopLogger(),
+                nestedTestSpans = false,
             )
 
         val testDescriptor = DefaultTestDescriptor(":test", "test.task.Klass", "failing test")
@@ -89,6 +90,7 @@ class OpenTelemetryTestListenerTest {
                 baggage = Baggage.builder().build(),
                 testTaskName = "test",
                 logger = NoopLogger(),
+                nestedTestSpans = false,
             )
 
         val testDescriptor = DefaultTestDescriptor(":test", "test.task.Klass", "passing test")
