@@ -12,8 +12,8 @@ import java.nio.file.Path
 
 class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase() {
     override val healthCheckPort = 14270
-    override val queryPort = 16687
     override val oltpGrpcPort = 4400
+    override val queryPort = 16687
 
     @Test
     fun `check spans`(

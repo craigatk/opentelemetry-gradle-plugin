@@ -6,7 +6,7 @@ You'll get a trace for each build with a span for every task, so you can find an
 
 ![Trace from sample build](img/sample-build.png "Trace from sample build")
 
-The plugin will also show you the test run breakdown per test case:
+The plugin will also show you the test duration breakdown per test class and test case:
 
 ![Trace with spans per test](img/per-test-spans.png "Trace with spans per test")
 

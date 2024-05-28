@@ -12,15 +12,15 @@ import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 
 abstract class JaegerIntegrationTestCase {
-    protected val json =
+    private val json =
         Json {
             ignoreUnknownKeys = true
         }
 
     // Support setting these ports per-test so the tests can be run in parallel without conflicting with each other
     abstract val healthCheckPort: Int
-    abstract val queryPort: Int
     abstract val oltpGrpcPort: Int
+    abstract val queryPort: Int
 
     @Serializable
     class JaegerApiResponse(
