@@ -13,6 +13,8 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val parentSpanIdEnvVarName: Property<String>
     abstract val parentTraceIdEnvVarName: Property<String>
     abstract val nestedTestSpans: Property<Boolean>
+    abstract val traceViewUrl: Property<String>
+    abstract val traceViewType: Property<TraceViewType>
 
     init {
         exporterMode.convention(OpenTelemetryExporterMode.GRPC)

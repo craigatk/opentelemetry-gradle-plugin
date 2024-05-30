@@ -1,5 +1,6 @@
 package com.atkinsondev.opentelemetry.build
 
+import com.atkinsondev.opentelemetry.build.util.BuildOutputParser.extractTraceId
 import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Assertions.assertLinesMatch
@@ -43,7 +44,7 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
         // Parse trace ID from build output
-        val traceId = Regex("OpenTelemetry build trace ID (\\w+)").find(buildResult.output)!!.groupValues[1]
+        val traceId = extractTraceId(buildResult.output)
 
         val orderedSpansNamesWithDepth = fetchSpansWithDepth(traceId)
 
@@ -97,7 +98,7 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
         // Parse trace ID from build output
-        val traceId = Regex("OpenTelemetry build trace ID (\\w+)").find(buildResult.output)!!.groupValues[1]
+        val traceId = extractTraceId(buildResult.output)
 
         val orderedSpansNamesWithDepth = fetchSpansWithDepth(traceId)
 

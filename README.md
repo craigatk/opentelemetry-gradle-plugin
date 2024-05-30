@@ -83,6 +83,44 @@ when they are passed in as environment variables and make the Gradle build part 
 By default, the plugin uses parent environment variables named `SPAN_ID` and `TRACE_ID` - and those can be configured if
 needed with plugin config parameters `parentSpanIdEnvVarName` and `parentTraceIdEnvVarName`.
 
+### URL for viewing trace
+
+Starting with plugin version `1.14.0`, you can specify the URL to view a trace in your OpenTelemetry backend
+and the plugin will substitute the trace ID and print out a convenient URL to quickly view the trace in your telemetry UI.
+
+For any OpenTelemetry backend, you can pass the `traceViewUrl` config parameter to specify the URL to view a trace with `{traceId}` in the place where the
+plugin should substitute the trace ID for that build.
+
+For example, for a local Jaeger instance with the UI running on port `16686`:
+
+```groovy
+openTelemetryBuild {
+    endpoint = "http://localhost:4317"
+    
+    traceViewUrl = "http://localhost:16686/trace/{traceId}"
+}
+```
+
+Then the plugin will print out the full URL to view the trace when the build completes:
+
+```
+OpenTelemetry build trace http://localhost:16686/trace/5a47e977c06a5d2a046d101fdedcb4ed
+```
+
+#### URLs for specific OpenTelemetry backends
+
+As a convenience for known OpenTelemetry backends, you can specify the type of the backend with the `traceViewType` parameter
+and then you only need to include the base URL for viewing traces:
+
+```groovy
+openTelemetryBuild {
+    endpoint = "http://localhost:4317"
+    
+    traceViewType = com.atkinsondev.opentelemetry.build.TraceViewType.JAEGER
+    traceViewUrl = "http://localhost:16686/"
+}
+```
+
 ## Usage
 
 ### Add plugin
@@ -91,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.12.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.13.0"
 }
 ```
 
@@ -134,17 +172,19 @@ openTelemetryBuild {
 
 #### All configuration options
 
-| Parameter               | Type                        | Default                          | Description                                                                                                                  |
-|-------------------------|-----------------------------|----------------------------------|------------------------------------------------------------------------------------------------------------------------------|
-| endpoint**              | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to                                                                                |
-| headers                 | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key                                                              |
-| serviceName             | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds`                         |
-| exporterMode            | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN` |
-| enabled                 | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                         |
-| customTags              | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                             |
-| parentSpanIdEnvVarName  | `String`                    | `SPAN_ID`                        | Environment variable name for a remote parent span ID (if using a parent trace like the Jenkins OpenTelemetry plugin)        |
-| parentTraceIdEnvVarName | `String`                    | `TRACE_ID`                       | Environment variable name for a remote parent trace ID (if using a parent trace like the Jenkins OpenTelemetry plugin)       |
-| nestedTestSpans         | `Boolean`                   | `true`                           | Whether test spans should be nested (per test executor, per test class, per method) or flat (just per test method)           |
+| Parameter               | Type                        | Default                          | Description                                                                                                                                                                                                                                                                                                                                                                            |
+|-------------------------|-----------------------------|----------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| endpoint**              | `String`                    | `null`                           | OpenTelemetry server endpoint to send data to                                                                                                                                                                                                                                                                                                                                          |
+| headers                 | `Map<String, String>`       | `null`                           | Headers to pass to the OpenTelemetry server, such as an API key                                                                                                                                                                                                                                                                                                                        |
+| serviceName             | `String`                    | `gradle-builds`                  | Name of the service to identify the traces in your OpenTelemetry server, defaults to `gradle-builds`                                                                                                                                                                                                                                                                                   |
+| exporterMode            | `OpenTelemetryExporterMode` | `OpenTelemetryExporterMode.GRPC` | OpenTelemetry exporter to use to send spans to your OpenTelemetry backend. Available options are `GRPC`, `HTTP`, or `ZIPKIN`                                                                                                                                                                                                                                                           |
+| enabled                 | `Boolean`                   | `true`                           | Whether the plugin is enabled or not                                                                                                                                                                                                                                                                                                                                                   |
+| customTags              | `Map<String, String>`       | `null`                           | Custom tags to add to each trace                                                                                                                                                                                                                                                                                                                                                       |
+| parentSpanIdEnvVarName  | `String`                    | `SPAN_ID`                        | Environment variable name for a remote parent span ID (if using a parent trace like the Jenkins OpenTelemetry plugin)                                                                                                                                                                                                                                                                  |
+| parentTraceIdEnvVarName | `String`                    | `TRACE_ID`                       | Environment variable name for a remote parent trace ID (if using a parent trace like the Jenkins OpenTelemetry plugin)                                                                                                                                                                                                                                                                 |
+| nestedTestSpans         | `Boolean`                   | `true`                           | Whether test spans should be nested (per test executor, per test class, per method) or flat (just per test method)                                                                                                                                                                                                                                                                     |
+| traceViewUrl            | `String`                    | `null`                           | Pass in a URL to have the plugin print a link to the trace at the end of the build (in addition to printing the trace ID). Put `{traceId}` in the URL for the location where the trace ID should be substituted, e.g. `http://localhost:16686/trace/{traceId}`. If using `traceViewType`, only put the root URL of the server e.g. `http://localhost:16686` for a local Jaeger server. |
+| traceViewType           | `TraceViewType`             | `null`                           | Convenience for trace view URLs for known OpenTelemetry backends such as Jaeger. When set, you don't have to put the full trace URL in the `traceViewUrl` param, only the root path of the OpenTelemetry backend's URL.                                                                                                                                                                | 
 
 ** _Required_
 
@@ -162,7 +202,7 @@ The plugin is compatible with Gradle versions `6.1.1` and higher.
 
 Example of running a Jaeger instance locally and publishing build traces to it:
 
-Run Jaegar via Docker and enable the OpenTelemetry collector with `COLLECTOR_OTLP_ENABLED=true`:
+Run Jaeger via Docker and enable the OpenTelemetry collector with `COLLECTOR_OTLP_ENABLED=true`:
 
 ```
 docker run --name jaeger \
@@ -173,11 +213,11 @@ docker run --name jaeger \
   jaegertracing/all-in-one:1.57
 ```
 
-Configure the plugin in `build.gradle` to point at the gRPC endpoint running on port `4317` in the local Jaegar instance:
+Configure the plugin in `build.gradle` to point at the gRPC endpoint running on port `4317` in the local Jaeger instance:
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "1.12.0"
+  id 'com.atkinsondev.opentelemetry-build' version "1.13.0"
 }
 
 openTelemetryBuild {
@@ -185,17 +225,19 @@ openTelemetryBuild {
 }
 ```
 
-Then to view the build traces in your local Jaegar instance:
+Then to view the build traces in your local Jaeger instance:
 
-1. Go to the Jaegar UI that is running on http://localhost:16686
+1. Go to the Jaeger UI that is running on http://localhost:16686
 2. Select the service "gradle-builds"
 3. Click "Find Traces"
 4. Select one of the traces
 
-![Jaegar trace](img/jaegar-trace.png "Jaegar trace")
+![Jaeger trace](img/jaegar-trace.png "Jaeger trace")
 
 ## Changelog
 
+* 1.14.0
+  * Adding support for logging the URL to view the build's trace with `traceViewUrl`
 * 1.13.0
   * Adding support for nested test spans in new parameter `nestedTestSpans` which defaults to `true`
 * 1.12.0
