@@ -13,7 +13,7 @@ plugins {
     id "org.jlleitschuh.gradle.ktlint" version "12.1.1"
     id "dev.projektor.publish" version "8.7.0"
     id "com.gradle.plugin-publish" version "1.2.1"
-    id "com.atkinsondev.opentelemetry-build" version "1.13.0"
+    id "com.atkinsondev.opentelemetry-build" version "1.14.0"
 }
 
 group = "com.atkinsondev"
@@ -79,4 +79,5 @@ openTelemetryBuild {
             "x-honeycomb-team": System.getenv("HONEYCOMB_API_KEY") ?: project.findProperty('honeycomb_api_key') ?: "",
             "x-honeycomb-dataset": "otel-gradle"
     ]
+    traceViewUrl = "https://ui.honeycomb.io/otel-gradle/environments/dev/datasets/gradle-builds/trace?trace_id={traceId}"
 }
