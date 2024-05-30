@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "1.13.0"
+    id 'com.atkinsondev.opentelemetry-build' version "1.14.0"
 }
 ```
 
@@ -217,7 +217,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "1.13.0"
+  id 'com.atkinsondev.opentelemetry-build' version "1.14.0"
 }
 
 openTelemetryBuild {
