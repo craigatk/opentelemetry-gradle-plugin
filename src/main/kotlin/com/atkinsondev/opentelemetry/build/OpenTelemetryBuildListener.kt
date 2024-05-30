@@ -8,7 +8,12 @@ import org.gradle.api.initialization.Settings
 import org.gradle.api.invocation.Gradle
 import org.gradle.api.logging.Logger
 
-class OpenTelemetryBuildListener(private val rootSpan: Span, private val openTelemetry: OpenTelemetrySdk, private val logger: Logger) : BuildListener {
+class OpenTelemetryBuildListener(
+    private val rootSpan: Span,
+    private val openTelemetry: OpenTelemetrySdk,
+    private val traceLogger: TraceLogger,
+    private val logger: Logger,
+) : BuildListener {
     override fun settingsEvaluated(settings: Settings) {
         rootSpan.addEvent("settings.evaluated")
     }
@@ -26,7 +31,7 @@ class OpenTelemetryBuildListener(private val rootSpan: Span, private val openTel
 
         rootSpan.end()
 
-        logger.warn("\nOpenTelemetry build trace ID ${rootSpan.spanContext.traceId}")
+        traceLogger.logTrace(rootSpan.spanContext.traceId)
 
         try {
             openTelemetry.sdkTracerProvider.forceFlush()

@@ -86,7 +86,8 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                         val rootSpan = rootSpanBuilder.startSpan()
 
-                        val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, project.logger)
+                        val traceLogger = TraceLogger(project.logger, extension.traceViewUrl.orNull, extension.traceViewType.orNull)
+                        val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, traceLogger, project.logger)
                         project.gradle.addBuildListener(buildListener)
 
                         val taskListener =
