@@ -52,7 +52,7 @@ dependencies {
     testImplementation "org.wiremock:wiremock:3.9.1"
     testImplementation "io.strikt:strikt-core:0.34.1"
     testImplementation "org.awaitility:awaitility-kotlin:4.2.1"
-    testImplementation "io.mockk:mockk:1.13.11"
+    testImplementation "io.mockk:mockk:1.13.13"
     testImplementation "org.testcontainers:testcontainers:1.19.8"
     testImplementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
     testImplementation "com.squareup.okhttp3:okhttp:4.12.0"
