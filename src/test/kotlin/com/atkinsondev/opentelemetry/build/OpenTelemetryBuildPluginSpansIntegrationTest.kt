@@ -51,7 +51,7 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         // Use assertLinesMatch, as it has nice support for regexes
         assertLinesMatch(
             listOf(
-                " junit\\d+-build",
+                " junit-\\d+-build",
                 "> :compileKotlin",
                 "> :processResources",
                 "> :processTestResources",
@@ -105,7 +105,7 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         // Use assertLinesMatch, as it has nice support for regexes
         assertLinesMatch(
             listOf(
-                " junit\\d+-build",
+                " junit-\\d+-build",
                 "> :compileKotlin",
                 "> :processResources",
                 "> :processTestResources",
