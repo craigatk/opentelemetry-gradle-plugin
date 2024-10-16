@@ -134,7 +134,11 @@ abstract class JaegerIntegrationTestCase {
                                     .first()
                                     .spanID
                             {
-                                depths[parentSpanId]!!() + 1
+                                if (depths.containsKey(parentSpanId)) {
+                                    depths[parentSpanId]!!() + 1
+                                } else {
+                                    0
+                                }
                             }
                         }
                     depths[span.spanID] = depth
