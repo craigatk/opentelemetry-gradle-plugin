@@ -12,6 +12,8 @@ fun createSrcDirectoryAndClassFile(projectRootDirPath: Path) {
     val sourceFileContents =
         """
         fun foo() = "bar"
+        
+        fun bar() = "foo"
         """.trimIndent()
 
     File(srcPath.toFile(), "foo.kt").writeText(sourceFileContents)
@@ -20,19 +22,48 @@ fun createSrcDirectoryAndClassFile(projectRootDirPath: Path) {
 fun createTestDirectoryAndClassFile(projectRootDirPath: Path) {
     val testPath = Paths.get(projectRootDirPath.absolutePathString(), "src/test/kotlin").createDirectories()
 
-    val testFileContents =
+    val fooTestFileContents =
         """
         import org.junit.jupiter.api.Test
+        import org.junit.jupiter.api.TestMethodOrder
+        import org.junit.jupiter.api.MethodOrderer
         
+        @TestMethodOrder(MethodOrderer.MethodName::class)
         class FooTest {
             @Test
             fun `foo should return bar`() {
                 assert(foo() == "bar")
             }
+            
+            @Test
+            fun `foo should not return baz`() {
+                assert(foo() != "baz")
+            }
         }
         """.trimIndent()
+    File(testPath.toFile(), "FooTest.kt").writeText(fooTestFileContents)
 
-    File(testPath.toFile(), "FooTest.kt").writeText(testFileContents)
+    val barTestFileContents =
+        """
+        import org.junit.jupiter.api.Test
+        
+        import org.junit.jupiter.api.TestMethodOrder
+        import org.junit.jupiter.api.MethodOrderer
+        
+        @TestMethodOrder(MethodOrderer.MethodName::class)
+        class BarTest {
+            @Test
+            fun `bar should return foo`() {
+                assert(bar() == "foo")
+            }
+            
+            @Test
+            fun `bar should not return baz`() {
+                assert(bar() != "baz")
+            }
+        }
+        """.trimIndent()
+    File(testPath.toFile(), "BarTest.kt").writeText(barTestFileContents)
 }
 
 fun createTestDirectoryAndFailingClassFile(projectRootDirPath: Path) {
@@ -64,7 +95,7 @@ fun baseBuildFileContents(): String =
     
     plugins {
         id "com.atkinsondev.opentelemetry-build"
-        id "org.jetbrains.kotlin.jvm" version "1.6.21"
+        id "org.jetbrains.kotlin.jvm" version "2.0.20"
     }
     
     repositories {

@@ -15,7 +15,7 @@ class TraceLoggerTest {
 
         every { logger.warn(any<String>()) } returns Unit
 
-        val traceLogger = TraceLogger(logger, "http://localhost:16686/trace/{traceId}", null)
+        val traceLogger = TraceLogger("http://localhost:16686/trace/{traceId}", null, logger)
 
         traceLogger.logTrace(traceId)
 
@@ -32,7 +32,7 @@ class TraceLoggerTest {
 
         every { logger.warn(any<String>()) } returns Unit
 
-        val traceLogger = TraceLogger(logger, "http://localhost:16686", TraceViewType.JAEGER)
+        val traceLogger = TraceLogger("http://localhost:16686", TraceViewType.JAEGER, logger)
 
         traceLogger.logTrace(traceId)
 
@@ -48,7 +48,7 @@ class TraceLoggerTest {
 
         every { logger.warn(any<String>()) } returns Unit
 
-        val traceLogger = TraceLogger(logger, "http://localhost:16686/", TraceViewType.JAEGER)
+        val traceLogger = TraceLogger("http://localhost:16686/", TraceViewType.JAEGER, logger)
 
         traceLogger.logTrace(traceId)
 
