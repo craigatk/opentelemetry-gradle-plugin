@@ -29,6 +29,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             openTelemetryBuild {
                 endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
                 supportConfigCache = true
+                
+                traceViewUrl = "http://localhost:16686/trace/{traceId}"
             }
             """.trimIndent()
 
@@ -51,6 +53,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
+
+        expectThat(buildResult.output).contains("OpenTelemetry build trace http://localhost:16686/trace/$traceId")
 
         val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
 

@@ -37,7 +37,7 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         val buildResult =
             GradleRunner.create()
                 .withProjectDir(projectRootDirPath.toFile())
-                .withArguments("test", "--info", "--stacktrace")
+                .withArguments("test", "--info")
                 .withPluginClasspath()
                 .build()
 
