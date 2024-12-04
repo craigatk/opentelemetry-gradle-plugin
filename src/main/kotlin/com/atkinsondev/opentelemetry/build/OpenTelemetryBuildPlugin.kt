@@ -80,6 +80,9 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                     spec.parameters.getExporterMode().set(extension.exporterMode.get())
                                     spec.parameters.getCustomTags().set(customTags.orEmpty())
 
+                                    spec.parameters.getTraceViewUrl().set(extension.traceViewUrl)
+                                    spec.parameters.getTraceViewType().set(extension.traceViewType)
+
                                     spec.parameters.getBuildStartTimeMilli().set(Instant.now().toEpochMilli())
 
                                     spec.parameters.getParentSpanIdEnvVarName().set(extension.parentSpanIdEnvVarName)
