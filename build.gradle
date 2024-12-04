@@ -54,7 +54,7 @@ dependencies {
     testImplementation "org.awaitility:awaitility-kotlin:4.2.2"
     testImplementation "io.mockk:mockk:1.13.13"
     testImplementation "org.testcontainers:testcontainers:1.20.4"
-    testImplementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3"
+    testImplementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.7.3"
     testImplementation "com.squareup.okhttp3:okhttp:4.12.0"
 }
 
