@@ -3,17 +3,26 @@ package com.atkinsondev.opentelemetry.build
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
-import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createRemoteSpanContext
-import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createValidSpanId
-import com.atkinsondev.opentelemetry.build.RemoteParentTracer.createdValidTraceId
+import com.atkinsondev.opentelemetry.build.service.ConfigCacheService
+import com.atkinsondev.opentelemetry.build.service.TaskEventsService
+import com.atkinsondev.opentelemetry.build.service.TestExecutionTrackerService
+import com.atkinsondev.opentelemetry.build.service.TestListenerService
+import com.atkinsondev.opentelemetry.build.service.TraceService
 import io.opentelemetry.api.baggage.Baggage
-import io.opentelemetry.api.trace.*
+import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import org.gradle.api.Plugin
 import org.gradle.api.Project
-import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.TaskCollection
+import org.gradle.build.event.BuildEventsListenerRegistry
+import org.gradle.util.GradleVersion
+import java.time.Instant
+import javax.inject.Inject
 
-class OpenTelemetryBuildPlugin : Plugin<Project> {
+abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
+    @Inject
+    abstract fun getEventsListenerRegistry(): BuildEventsListenerRegistry
+
     override fun apply(project: Project) {
         val extension = project.extensions.create("openTelemetryBuild", OpenTelemetryBuildPluginExtension::class.java)
 
@@ -43,62 +52,121 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
                         }
 
                     if (headers != null) {
-                        val openTelemetry =
-                            OpenTelemetryInit(project.logger).init(
-                                endpoint = endpoint,
-                                headers = headers,
-                                serviceName = serviceName,
-                                exporterMode = extension.exporterMode.get(),
-                                customTags = customTags.orEmpty(),
-                            )
+                        // org.gradle.api.configuration.BuildFeatures class was added in Gradle 8.5
+                        // otherwise fall back to the plugin extension parameter
+                        val configurationCacheRequested =
+                            if (GradleVersion.current() >= GradleVersion.version("8.5")) {
+                                val configCacheService = project.gradle.sharedServices.registerIfAbsent("configCache", ConfigCacheService::class.java) { spec -> }
 
-                        val tracer = openTelemetry.getTracer(serviceName)
-
-                        val taskNames = project.gradle.startParameter.taskNames
-
-                        // Put the following attributes on all spans
-                        val baggage =
-                            Baggage.builder()
-                                .put(PROJECT_NAME_KEY, project.name)
-                                .put(GRADLE_VERSION_KEY, project.gradle.gradleVersion)
-                                .put(IS_CI_KEY, isCI("CI").toString())
-                                .build()
-
-                        val rootSpanName = "${project.name}-build"
-
-                        val parenSpanContext = parentSpanContext(extension, SystemEnvironmentSource(), project.logger)
-
-                        val parentContext =
-                            if (parenSpanContext != null) {
-                                Context.root().with(Span.wrap(parenSpanContext))
+                                extension.supportConfigCache.getOrElse(false) || configCacheService.get().configCacheRequested()
                             } else {
-                                null
+                                extension.supportConfigCache.getOrElse(false)
                             }
 
-                        val rootSpanBuilder =
-                            tracer.spanBuilder(rootSpanName)
-                                .setAttribute("build.task.names", taskNames.joinToString(" "))
-                                .addBaggage(baggage)
+                        if (configurationCacheRequested) {
+                            project.logger.info("Using configuration-cache compatible task events service")
 
-                        if (parentContext != null) {
-                            rootSpanBuilder.setParent(parentContext)
+                            val traceServiceProvider =
+                                project.gradle.sharedServices.registerIfAbsent("trace", TraceService::class.java) { spec ->
+                                    spec.parameters.getTaskNames().set(project.gradle.startParameter.taskNames)
+                                    spec.parameters.getProjectName().set(project.name)
+                                    spec.parameters.getGradleVersion().set(project.gradle.gradleVersion)
+                                    spec.parameters.getIsCI().set(isCI("CI"))
+                                    spec.parameters.getNestedTestSpans().set(extension.nestedTestSpans.get())
+
+                                    spec.parameters.getEndpoint().set(endpoint)
+                                    spec.parameters.getHeaders().set(headers)
+                                    spec.parameters.getServiceName().set(serviceName)
+                                    spec.parameters.getExporterMode().set(extension.exporterMode.get())
+                                    spec.parameters.getCustomTags().set(customTags.orEmpty())
+
+                                    spec.parameters.getBuildStartTimeMilli().set(Instant.now().toEpochMilli())
+
+                                    spec.parameters.getParentSpanIdEnvVarName().set(extension.parentSpanIdEnvVarName)
+                                    spec.parameters.getParentTraceIdEnvVarName().set(extension.parentTraceIdEnvVarName)
+                                }
+
+                            val taskEventsService =
+                                project.gradle.sharedServices.registerIfAbsent("taskEvents", TaskEventsService::class.java) { spec ->
+                                    spec.parameters.getTraceService().set(traceServiceProvider)
+                                }
+                            getEventsListenerRegistry().onTaskCompletion(taskEventsService)
+
+                            val testExecutionTrackerServiceProvider = project.gradle.sharedServices.registerIfAbsent("testTracker", TestExecutionTrackerService::class.java)
+
+                            val testTasks: TaskCollection<org.gradle.api.tasks.testing.Test> = project.tasks.withType(org.gradle.api.tasks.testing.Test::class.java)
+                            testTasks.forEach { testTask ->
+                                testTask.addTestListener(
+                                    TestListenerService(
+                                        testTaskPath = testTask.path,
+                                        testTaskName = testTask.name,
+                                        nestedTestSpans = extension.nestedTestSpans.getOrElse(false),
+                                        testExecutionTrackerService = testExecutionTrackerServiceProvider,
+                                    ),
+                                )
+                            }
+                        } else {
+                            val taskNames = project.gradle.startParameter.taskNames
+
+                            val openTelemetry =
+                                OpenTelemetryInit().init(
+                                    endpoint = endpoint,
+                                    headers = headers,
+                                    serviceName = serviceName,
+                                    exporterMode = extension.exporterMode.get(),
+                                    customTags = customTags.orEmpty(),
+                                )
+
+                            val tracer = openTelemetry.getTracer(serviceName)
+
+                            // Put the following attributes on all spans
+                            val baggage =
+                                Baggage.builder()
+                                    .put(PROJECT_NAME_KEY, project.name)
+                                    .put(GRADLE_VERSION_KEY, project.gradle.gradleVersion)
+                                    .put(IS_CI_KEY, isCI("CI").toString())
+                                    .build()
+
+                            val rootSpanName = "${project.name}-build"
+
+                            val rootSpanBuilder =
+                                tracer.spanBuilder(rootSpanName)
+                                    .setAttribute("build.task.names", taskNames.joinToString(" "))
+                                    .addBaggage(baggage)
+
+                            val parenSpanContext =
+                                ParentSpan.parentSpanContext(
+                                    parentSpanIdEnvVarName = extension.parentSpanIdEnvVarName,
+                                    parentTraceIdEnvVarName = extension.parentTraceIdEnvVarName,
+                                    SystemEnvironmentSource(),
+                                )
+                            val parentContext =
+                                if (parenSpanContext != null) {
+                                    Context.root().with(Span.wrap(parenSpanContext))
+                                } else {
+                                    null
+                                }
+                            if (parentContext != null) {
+                                rootSpanBuilder.setParent(parentContext)
+                            }
+
+                            val rootSpan = rootSpanBuilder.startSpan()
+
+                            val traceLogger = TraceLogger(extension.traceViewUrl.orNull, extension.traceViewType.orNull, project.logger)
+
+                            val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, traceLogger, project.logger)
+                            project.gradle.addBuildListener(buildListener)
+
+                            val taskListener =
+                                OpenTelemetryTaskListener(
+                                    tracer = tracer,
+                                    rootSpan = rootSpan,
+                                    baggage = baggage,
+                                    logger = project.logger,
+                                    nestedTestSpans = extension.nestedTestSpans.get(),
+                                )
+                            project.gradle.addListener(taskListener)
                         }
-
-                        val rootSpan = rootSpanBuilder.startSpan()
-
-                        val traceLogger = TraceLogger(project.logger, extension.traceViewUrl.orNull, extension.traceViewType.orNull)
-                        val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, traceLogger, project.logger)
-                        project.gradle.addBuildListener(buildListener)
-
-                        val taskListener =
-                            OpenTelemetryTaskListener(
-                                tracer = tracer,
-                                rootSpan = rootSpan,
-                                baggage = baggage,
-                                logger = project.logger,
-                                nestedTestSpans = extension.nestedTestSpans.get(),
-                            )
-                        project.gradle.addListener(taskListener)
                     } else {
                         project.logger.warn(CONFIG_ERROR_MESSAGE)
                     }
@@ -119,50 +187,5 @@ class OpenTelemetryBuildPlugin : Plugin<Project> {
         const val CONFIG_ERROR_MESSAGE = "Error reading config for OpenTelemetry build plugin - disabling plugin."
 
         fun isCI(ciEnvVariableName: String): Boolean = System.getenv(ciEnvVariableName) != null
-
-        fun parentSpanContext(
-            extension: OpenTelemetryBuildPluginExtension,
-            environmentSource: EnvironmentSource,
-            logger: Logger,
-        ): SpanContext? {
-            // Create a parent context passed in from a CI system like Jenkins to tie the Gradle trace
-            // with one created by a parent system.
-            // Ref https://github.com/open-telemetry/opentelemetry-java/discussions/4668
-            if (extension.parentSpanIdEnvVarName.isPresent && extension.parentTraceIdEnvVarName.isPresent) {
-                logger.info(
-                    "Reading parent span ID from environment variable {} and trace ID from environment variable {}",
-                    extension.parentSpanIdEnvVarName.get(),
-                    extension.parentTraceIdEnvVarName.get(),
-                )
-
-                val parentSpanIdStr = environmentSource.getenv(extension.parentSpanIdEnvVarName.get())
-                val parentTraceIdStr = environmentSource.getenv(extension.parentTraceIdEnvVarName.get())
-
-                val parentSpanIdHex = createValidSpanId(parentSpanIdStr)
-                val parentTraceIdHex = createdValidTraceId(parentTraceIdStr)
-
-                if (parentSpanIdHex != null && parentTraceIdHex != null) {
-                    val remoteSpanContext = createRemoteSpanContext(parentTraceIdHex, parentSpanIdHex)
-
-                    if (remoteSpanContext.isValid) {
-                        logger.info("Using parent span ID {} and parent trace ID {}", parentSpanIdStr, parentTraceIdStr)
-
-                        return remoteSpanContext
-                    } else {
-                        logger.warn("Remote span context is not valid. Parent span ID: {} - parent trace ID: {}", parentSpanIdStr, parentTraceIdStr)
-                    }
-                }
-
-                if (parentSpanIdStr != null && parentSpanIdHex == null) {
-                    logger.info("Received invalid parent span ID {}", parentSpanIdStr)
-                }
-
-                if (parentTraceIdStr != null && parentTraceIdHex == null) {
-                    logger.info("Received invalid parent trace ID {}", parentTraceIdStr)
-                }
-            }
-
-            return null
-        }
     }
 }

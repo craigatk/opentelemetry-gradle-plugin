@@ -2,6 +2,7 @@ package com.atkinsondev.opentelemetry.build
 
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonElement
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.AfterEach
@@ -10,6 +11,8 @@ import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
+import strikt.assertions.isGreaterThan
+import strikt.assertions.isNotNull
 
 abstract class JaegerIntegrationTestCase {
     private val json =
@@ -42,7 +45,12 @@ abstract class JaegerIntegrationTestCase {
         val operationName: String,
         val references: List<JaegerApiResponseSpanReference>,
         val startTime: Long,
-    )
+        val tags: List<JaegerApiResponseTag>,
+    ) {
+        fun parentSpanId(): String? = references.firstOrNull()?.spanID
+
+        override fun toString(): String = this.operationName
+    }
 
     @Serializable
     class JaegerApiResponseSpanReference(
@@ -59,11 +67,38 @@ abstract class JaegerIntegrationTestCase {
         }
     }
 
-    class FlatSpan(
+    @Serializable
+    class JaegerApiResponseTag(
+        val key: String,
+        val value: JsonElement,
+    )
+
+    class SpanWithDepth(
         val operationName: String,
         val startTime: Long,
-        val depth: () -> Int,
-    )
+        val depth: Int,
+    ) {
+        fun expectThatSpanIsAfter(
+            earlierSpanName: String,
+            spansWithDepth: List<SpanWithDepth>,
+        ) {
+            val earlierSpan = spansWithDepth.find { it.operationName == earlierSpanName }
+            expectThat(earlierSpan).isNotNull()
+
+            expectThat(startTime).isGreaterThan(earlierSpan!!.startTime)
+        }
+    }
+
+    data class ResponseSpan(
+        val operationName: String,
+        val startTime: Long,
+        val depth: Int,
+        val children: List<ResponseSpan>,
+    ) {
+        override fun toString(): String = ">".repeat(depth) + " $operationName"
+
+        fun allStrings(): List<String> = listOf(this.toString()) + children.flatMap { it.allStrings() }
+    }
 
     lateinit var jaegerContainer: GenericContainer<*>
 
@@ -96,7 +131,18 @@ abstract class JaegerIntegrationTestCase {
         jaegerContainer.stop()
     }
 
-    fun fetchSpansWithDepth(traceId: String): List<String> {
+    protected fun fetchSpanNamesWithDepth(traceId: String): List<String> {
+        val apiResponse = fetchTrace(traceId)
+
+        val allSpans = apiResponse.data.flatMap { it.spans }
+        val orderedSpans = allSpans.sortedBy { span -> span.startTime }
+
+        val rootSpans = findSpansWithParent(orderedSpans, 0, null)
+
+        return rootSpans.flatMap { it.allStrings() }
+    }
+
+    protected fun fetchTrace(traceId: String): JaegerApiResponse {
         // Fetch trace data from Jaeger
         val httpClient = OkHttpClient.Builder().build()
         val request =
@@ -107,55 +153,79 @@ abstract class JaegerIntegrationTestCase {
         val resp = httpClient.newCall(request).execute()
         expectThat(resp.code).isEqualTo(200)
 
-        val orderedSpansNamesWithDepth = extractSpansWithDepth(resp.body!!.string())
+        val responseBodyStr = resp.body!!.string()
 
-        return orderedSpansNamesWithDepth
+        val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr)
+
+        return apiResponse
     }
 
-    fun extractSpansWithDepth(responseBodyString: String): List<String> {
-        val decoded = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyString)
-        // Lazy as the order isn't always correct (e.g. the result returned by Jaeger returns a child span before the parent)
-        val depths = mutableMapOf<String, () -> Int>()
-        val orderedSpans =
-            // Even though so far we only expect `data` to contain a single element, a flatMap should make sense here
-            decoded.data.flatMap { d ->
-                d.spans.map { span ->
-                    val depth =
-                        if (span.references.isEmpty()) {
-                            {
-                                0
-                            }
-                        } else {
-                            val parentSpanId =
-                                span.references
-                                    .also {
-                                        assert(it.size == 1)
-                                    }
-                                    .first()
-                                    .spanID
-                            {
-                                if (depths.containsKey(parentSpanId)) {
-                                    depths[parentSpanId]!!() + 1
-                                } else {
-                                    0
-                                }
-                            }
-                        }
-                    depths[span.spanID] = depth
-                    FlatSpan(
-                        operationName = span.operationName,
-                        startTime = span.startTime,
-                        depth = depth,
-                    )
-                }
-            }.sortedBy {
-                it.startTime
+    protected fun fetchSpansWithDepth(traceId: String): List<SpanWithDepth> {
+        val apiResponse = fetchTrace(traceId)
+
+        val orderedSpansWithDepth = extractSpansWithDepth(apiResponse)
+
+        return orderedSpansWithDepth
+    }
+
+    private fun findSpansWithParent(
+        allSpans: List<JaegerApiResponseSpan>,
+        depth: Int,
+        parentSpanId: String?,
+    ): List<ResponseSpan> {
+        val spansWithParent = allSpans.filter { it.parentSpanId() == parentSpanId }
+
+        return if (spansWithParent.isNotEmpty()) {
+            spansWithParent.map {
+                ResponseSpan(
+                    operationName = it.operationName,
+                    startTime = it.startTime,
+                    depth = depth,
+                    children = findSpansWithParent(allSpans, depth + 1, it.spanID),
+                )
             }
-        val orderedSpansNamesWithDepth =
-            orderedSpans.map {
-                ">".repeat(it.depth()) + " ${it.operationName}"
+        } else {
+            listOf()
+        }
+    }
+
+    private fun extractSpansWithDepth(apiResponse: JaegerApiResponse): List<SpanWithDepth> {
+        // Lazy as the order isn't always correct (e.g. the result returned by Jaeger returns a child span before the parent)
+        val depths = mutableMapOf<String, Int>()
+
+        val allSpans = apiResponse.data.flatMap { it.spans }
+        val orderedSpans = allSpans.sortedBy { span -> span.startTime }
+
+        // val rootSpans = findSpansWithParent(orderedSpans, 0 ,null)
+
+        val orderedSpansWithDepth =
+            orderedSpans.map { span ->
+                val depth =
+                    if (span.references.isEmpty()) {
+                        0
+                    } else {
+                        val parentSpanId =
+                            span.references
+                                .also {
+                                    assert(it.size == 1)
+                                }
+                                .first()
+                                .spanID
+
+                        if (depths.containsKey(parentSpanId)) {
+                            depths[parentSpanId]!! + 1
+                        } else {
+                            0
+                        }
+                    }
+                depths[span.spanID] = depth
+                SpanWithDepth(
+                    operationName = span.operationName,
+                    startTime = span.startTime,
+                    depth = depth,
+                )
             }
 
-        return orderedSpansNamesWithDepth
+        return orderedSpansWithDepth
     }
 }

@@ -46,23 +46,29 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
 
-        val orderedSpansNamesWithDepth = fetchSpansWithDepth(traceId)
+        val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
 
         // Use assertLinesMatch, as it has nice support for regexes
         assertLinesMatch(
             listOf(
                 " junit-\\d+-build",
+                "> :checkKotlinGradlePluginConfigurationErrors",
                 "> :compileKotlin",
                 "> :processResources",
                 "> :processTestResources",
                 "> :compileJava",
                 "> :classes",
+                "> :jar",
                 "> :compileTestKotlin",
                 "> :compileTestJava",
                 "> :testClasses",
                 "> :test",
-                ">> Gradle Test Executor \\d",
+                ">> Gradle Test Executor \\d+",
+                ">>> BarTest",
+                ">>>> bar should not return baz()",
+                ">>>> bar should return foo()",
                 ">>> FooTest",
+                ">>>> foo should not return baz()",
                 ">>>> foo should return bar()",
             ),
             orderedSpansNamesWithDepth,
@@ -100,21 +106,26 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
 
-        val orderedSpansNamesWithDepth = fetchSpansWithDepth(traceId)
+        val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
 
         // Use assertLinesMatch, as it has nice support for regexes
         assertLinesMatch(
             listOf(
                 " junit-\\d+-build",
+                "> :checkKotlinGradlePluginConfigurationErrors",
                 "> :compileKotlin",
                 "> :processResources",
                 "> :processTestResources",
                 "> :compileJava",
                 "> :classes",
+                "> :jar",
                 "> :compileTestKotlin",
                 "> :compileTestJava",
                 "> :testClasses",
                 "> :test",
+                ">> BarTest bar should not return baz()",
+                ">> BarTest bar should return foo()",
+                ">> FooTest foo should not return baz()",
                 ">> FooTest foo should return bar()",
             ),
             orderedSpansNamesWithDepth,

@@ -15,6 +15,7 @@ import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
 import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
 import org.gradle.api.tasks.testing.TestDescriptor
 import org.gradle.api.tasks.testing.TestListener
 import org.gradle.api.tasks.testing.TestResult
@@ -26,8 +27,8 @@ class OpenTelemetryTestListener(
     private val testTaskSpan: Span,
     private val baggage: Baggage,
     private val testTaskName: String,
-    private val logger: Logger,
     private val nestedTestSpans: Boolean,
+    private val logger: Logger = Logging.getLogger(OpenTelemetryTestListener::class.java),
 ) : TestListener {
     private val stackTraceMaxDepth = 5
 

@@ -18,7 +18,7 @@ import java.nio.file.Path
 @WireMockTest
 class OpenTelemetryBuildPluginCrossVersionTest {
     @ParameterizedTest
-    @ValueSource(strings = ["7.3", "7.6.3", "8.4", "8.5", "8.10.2"])
+    @ValueSource(strings = ["7.3", "7.6.3", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
     fun `should send data to OpenTelemetry with HTTP with different Gradle versions`(
         gradleVersion: String,
         wmRuntimeInfo: WireMockRuntimeInfo,
