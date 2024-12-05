@@ -13,11 +13,11 @@ plugins {
     id "org.jlleitschuh.gradle.ktlint" version "12.1.2"
     id "dev.projektor.publish" version "9.0.0"
     id "com.gradle.plugin-publish" version "1.3.0"
-    id "com.atkinsondev.opentelemetry-build" version "2.2.0-RC-2"
+    id "com.atkinsondev.opentelemetry-build" version "2.2.0-RC-3"
 }
 
 group = "com.atkinsondev"
-version = "2.2.0-RC-3"
+version = "2.2.0-RC-4"
 
 gradlePlugin {
     website = 'https://github.com/craigatk/opentelemetry-gradle-plugin'

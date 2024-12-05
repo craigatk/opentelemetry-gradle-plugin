@@ -90,6 +90,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             openTelemetryBuild {
                 endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
                 supportConfigCache = true
+                nestedTestSpans = false
                 
                 traceViewUrl = "http://localhost:16686/trace/{traceId}"
             }
@@ -130,9 +131,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 "> :compileTestJava",
                 "> :testClasses",
                 "> :test",
-                ">> Gradle Test Executor \\d+",
-                ">>> FooTest",
-                ">>>> foo should return bar but will fail()",
+                ">> FooTest foo should return bar but will fail()",
             ),
             orderedSpansNamesWithDepth,
         )
@@ -157,6 +156,24 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             .any {
                 get { key }.isEqualTo("task.path")
                 get { strValue }.isEqualTo(":test")
+            }
+
+        val testCaseSpan = testTaskSpan?.children?.first()
+        expectThat(testCaseSpan?.operationName).isEqualTo("FooTest foo should return bar but will fail()")
+
+        expectThat(testCaseSpan?.tags)
+            .isNotNull()
+            .any {
+                get { key }.isEqualTo("error")
+                get { boolValue }.isEqualTo(true)
+            }
+            .any {
+                get { key }.isEqualTo("error_message")
+                get { strValue }.isNotNull().contains("Assertion failed")
+            }
+            .any {
+                get { key }.isEqualTo("test.failure.stacktrace")
+                get { strValue }.isNotNull().contains("FooTest.foo should return bar but will fail")
             }
     }
 
