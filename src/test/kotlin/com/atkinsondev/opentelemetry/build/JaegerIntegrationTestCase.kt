@@ -1,8 +1,7 @@
 package com.atkinsondev.opentelemetry.build
 
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.junit.jupiter.api.AfterEach
@@ -70,8 +69,17 @@ abstract class JaegerIntegrationTestCase {
     @Serializable
     class JaegerApiResponseTag(
         val key: String,
+        val type: String,
         val value: JsonElement,
-    )
+    ) {
+        fun toResponseSpanTag(): ResponseSpanTag =
+            ResponseSpanTag(
+                key = key,
+                type = type,
+                boolValue = if (type == "bool") value.jsonPrimitive.booleanOrNull else null,
+                strValue = if (type == "string") value.jsonPrimitive.content else null,
+            )
+    }
 
     class SpanWithDepth(
         val operationName: String,
@@ -93,12 +101,20 @@ abstract class JaegerIntegrationTestCase {
         val operationName: String,
         val startTime: Long,
         val depth: Int,
+        val tags: List<ResponseSpanTag>,
         val children: List<ResponseSpan>,
     ) {
         override fun toString(): String = ">".repeat(depth) + " $operationName"
 
         fun allStrings(): List<String> = listOf(this.toString()) + children.flatMap { it.allStrings() }
     }
+
+    data class ResponseSpanTag(
+        val key: String,
+        val type: String,
+        val boolValue: Boolean?,
+        val strValue: String?,
+    )
 
     lateinit var jaegerContainer: GenericContainer<*>
 
@@ -132,6 +148,12 @@ abstract class JaegerIntegrationTestCase {
     }
 
     protected fun fetchSpanNamesWithDepth(traceId: String): List<String> {
+        val rootSpans = fetchRootSpans(traceId)
+
+        return rootSpans.flatMap { it.allStrings() }
+    }
+
+    protected fun fetchRootSpans(traceId: String): List<ResponseSpan> {
         val apiResponse = fetchTrace(traceId)
 
         val allSpans = apiResponse.data.flatMap { it.spans }
@@ -139,7 +161,7 @@ abstract class JaegerIntegrationTestCase {
 
         val rootSpans = findSpansWithParent(orderedSpans, 0, null)
 
-        return rootSpans.flatMap { it.allStrings() }
+        return rootSpans
     }
 
     protected fun fetchTrace(traceId: String): JaegerApiResponse {
@@ -176,12 +198,13 @@ abstract class JaegerIntegrationTestCase {
         val spansWithParent = allSpans.filter { it.parentSpanId() == parentSpanId }
 
         return if (spansWithParent.isNotEmpty()) {
-            spansWithParent.map {
+            spansWithParent.map { span ->
                 ResponseSpan(
-                    operationName = it.operationName,
-                    startTime = it.startTime,
+                    operationName = span.operationName,
+                    startTime = span.startTime,
                     depth = depth,
-                    children = findSpansWithParent(allSpans, depth + 1, it.spanID),
+                    tags = span.tags.map(JaegerApiResponseTag::toResponseSpanTag),
+                    children = findSpansWithParent(allSpans, depth + 1, span.spanID),
                 )
             }
         } else {
@@ -195,8 +218,6 @@ abstract class JaegerIntegrationTestCase {
 
         val allSpans = apiResponse.data.flatMap { it.spans }
         val orderedSpans = allSpans.sortedBy { span -> span.startTime }
-
-        // val rootSpans = findSpansWithParent(orderedSpans, 0 ,null)
 
         val orderedSpansWithDepth =
             orderedSpans.map { span ->

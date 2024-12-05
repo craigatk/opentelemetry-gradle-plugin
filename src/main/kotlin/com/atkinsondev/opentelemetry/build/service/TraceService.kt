@@ -1,9 +1,13 @@
 package com.atkinsondev.opentelemetry.build.service
 
 import com.atkinsondev.opentelemetry.build.*
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_MESSAGE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILED_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILURE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_PATH_KEY
 import com.atkinsondev.opentelemetry.build.service.model.TaskExecutionResult
@@ -120,7 +124,7 @@ abstract class TraceService : BuildService<TraceService.Params> {
             start()
         }
 
-        val span =
+        val spanBuilder =
             tracer
                 .spanBuilder(executionResult.key)
                 .setParent(Context.current().with(rootSpan))
@@ -128,7 +132,15 @@ abstract class TraceService : BuildService<TraceService.Params> {
                 .setStartTimestamp(executionResult.startTime)
                 .setAttribute(TASK_NAME_KEY, executionResult.name)
                 .setAttribute(TASK_PATH_KEY, executionResult.path)
-                .startSpan()
+
+        if (executionResult.failed) {
+            spanBuilder.setAttribute(ERROR_KEY, true)
+            spanBuilder.setAttribute(ERROR_MESSAGE_KEY, executionResult.failure?.failureMessage ?: "")
+            spanBuilder.setAttribute(TASK_FAILED_KEY, true)
+            spanBuilder.setAttribute(TASK_FAILURE_KEY, executionResult.failure?.failureMessage ?: "")
+        }
+
+        val span = spanBuilder.startSpan()
 
         span.end(executionResult.endTime)
 
