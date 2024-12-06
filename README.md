@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "2.1.0"
+    id 'com.atkinsondev.opentelemetry-build' version "2.2.0"
 }
 ```
 
@@ -184,7 +184,8 @@ openTelemetryBuild {
 | parentTraceIdEnvVarName | `String`                    | `TRACE_ID`                       | Environment variable name for a remote parent trace ID (if using a parent trace like the Jenkins OpenTelemetry plugin)                                                                                                                                                                                                                                                                 |
 | nestedTestSpans         | `Boolean`                   | `true`                           | Whether test spans should be nested (per test executor, per test class, per method) or flat (just per test method)                                                                                                                                                                                                                                                                     |
 | traceViewUrl            | `String`                    | `null`                           | Pass in a URL to have the plugin print a link to the trace at the end of the build (in addition to printing the trace ID). Put `{traceId}` in the URL for the location where the trace ID should be substituted, e.g. `http://localhost:16686/trace/{traceId}`. If using `traceViewType`, only put the root URL of the server e.g. `http://localhost:16686` for a local Jaeger server. |
-| traceViewType           | `TraceViewType`             | `null`                           | Convenience for trace view URLs for known OpenTelemetry backends such as Jaeger. When set, you don't have to put the full trace URL in the `traceViewUrl` param, only the root path of the OpenTelemetry backend's URL.                                                                                                                                                                | 
+| traceViewType           | `TraceViewType`             | `null`                           | Convenience for trace view URLs for known OpenTelemetry backends such as Jaeger. When set, you don't have to put the full trace URL in the `traceViewUrl` param, only the root path of the OpenTelemetry backend's URL.                                                                                                                                                                |
+| supportConfigCache      | `Boolean`                   | `false`                          | Enable experimental support for the Gradle configuration cache. When used with Gradle 8.5+, the plugin will auto-detect if the configuration cache is enabled and this parameter is not necessary                                                                                                                                                                                      |
 
 ** _Required_
 
@@ -194,7 +195,16 @@ The plugin is compatible with Java 17+ and Gradle versions `7.3` and higher.
 
 ### Limitations
 
-* Incompatible with the configuration cache. This plugin uses a `BuildListener.buildFinished` event, which isn't compatible with the configuration cache
+#### Gradle configuration cache
+
+There is experimental support for using this plugin with the [Gradle configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html) starting with version `2.2.0` of the plugin.
+
+To use the plugin with the configuration cache:
+
+* With Gradle >=8.5 the plugin will auto-detect if the configuration cache is enabled
+* With Gradle <8.5 set the plugin parameter `supportConfigCache = true`
+
+Due to the fundamental plugin changes required to work with the configuration cache, not all span attributes are supported when the configuration cache is in use.
 
 ## Examples
 
@@ -217,7 +227,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "2.1.0"
+  id 'com.atkinsondev.opentelemetry-build' version "2.2.0"
 }
 
 openTelemetryBuild {
@@ -236,6 +246,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 2.2.0
+  * Adding experimental support for using plugin with the [Gradle configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html)
 * 2.1.0
   * Upgrading to OpenTelemetry 1.43.0
 * 2.0.0
