@@ -3,6 +3,8 @@ package com.atkinsondev.opentelemetry.build.service
 import com.atkinsondev.opentelemetry.build.*
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.ERROR_MESSAGE_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_MESSAGE_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_STACKTRACE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
@@ -190,6 +192,13 @@ abstract class TraceService : BuildService<TraceService.Params> {
                 .addBaggage(baggage)
                 .setAttribute(TASK_NAME_KEY, executionResult.taskName)
                 .setStartTimestamp(Instant.ofEpochMilli(executionResult.startTime))
+
+        if (executionResult.failure != null) {
+            spanBuilder.setAttribute(ERROR_KEY, true)
+            spanBuilder.setAttribute(ERROR_MESSAGE_KEY, executionResult.failure.message ?: "")
+            spanBuilder.setAttribute(FAILURE_MESSAGE_KEY, executionResult.failure.message ?: "")
+            spanBuilder.setAttribute(FAILURE_STACKTRACE_KEY, executionResult.failure.stackTrace ?: "")
+        }
 
         val span = spanBuilder.startSpan()
 
