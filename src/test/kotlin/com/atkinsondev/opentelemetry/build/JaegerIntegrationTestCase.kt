@@ -10,9 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import strikt.api.expectThat
-import strikt.assertions.isEqualTo
-import strikt.assertions.isGreaterThan
-import strikt.assertions.isNotNull
+import strikt.assertions.*
 
 abstract class JaegerIntegrationTestCase {
     private val json =
@@ -177,15 +175,20 @@ abstract class JaegerIntegrationTestCase {
                 .get()
                 .build()
 
+        var responseBodyStr: String? = ""
+
         await().untilAsserted {
             val resp = httpClient.newCall(request).execute()
             expectThat(resp.code).isEqualTo(200)
+
+            responseBodyStr = resp.body!!.string()
+
+            val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
+            expectThat(apiResponse.data).hasSize(1)
+            expectThat(apiResponse.data.first().spans).isNotEmpty()
         }
 
-        val resp = httpClient.newCall(request).execute()
-        val responseBodyStr = resp.body!!.string()
-
-        val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr)
+        val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
 
         return apiResponse
     }
