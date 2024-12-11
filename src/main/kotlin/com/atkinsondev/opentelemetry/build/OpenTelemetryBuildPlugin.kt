@@ -3,16 +3,13 @@ package com.atkinsondev.opentelemetry.build
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
-import com.atkinsondev.opentelemetry.build.service.ConfigCacheService
-import com.atkinsondev.opentelemetry.build.service.TaskEventsService
-import com.atkinsondev.opentelemetry.build.service.TestExecutionTrackerService
-import com.atkinsondev.opentelemetry.build.service.TestListenerService
-import com.atkinsondev.opentelemetry.build.service.TraceService
+import com.atkinsondev.opentelemetry.build.service.*
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.util.GradleVersion
@@ -89,23 +86,36 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                     spec.parameters.getParentTraceIdEnvVarName().set(extension.parentTraceIdEnvVarName)
                                 }
 
-                            val taskEventsService =
+                            val testExecutionTrackerServiceProvider = project.gradle.sharedServices.registerIfAbsent("testTracker", TestExecutionTrackerService::class.java) { spec -> }
+
+                            val taskEventsServiceProvider =
                                 project.gradle.sharedServices.registerIfAbsent("taskEvents", TaskEventsService::class.java) { spec ->
                                     spec.parameters.getTraceService().set(traceServiceProvider)
                                 }
-                            getEventsListenerRegistry().onTaskCompletion(taskEventsService)
-
-                            val testExecutionTrackerServiceProvider = project.gradle.sharedServices.registerIfAbsent("testTracker", TestExecutionTrackerService::class.java)
+                            getEventsListenerRegistry().onTaskCompletion(taskEventsServiceProvider)
 
                             val testTasks: TaskCollection<org.gradle.api.tasks.testing.Test> = project.tasks.withType(org.gradle.api.tasks.testing.Test::class.java)
                             testTasks.forEach { testTask ->
-                                testTask.addTestListener(
+                                val testListener =
                                     TestListenerService(
                                         testTaskPath = testTask.path,
                                         testTaskName = testTask.name,
                                         nestedTestSpans = extension.nestedTestSpans.getOrElse(false),
                                         testExecutionTrackerService = testExecutionTrackerServiceProvider,
-                                    ),
+                                    )
+                                testTask.usesService(testExecutionTrackerServiceProvider)
+
+                                testTask.addTestListener(testListener)
+                            }
+
+                            if (extension.taskTraceEnvironmentEnabled.getOrElse(false)) {
+                                val traceSpanPair = traceServiceProvider.get().start()
+
+                                passTraceContextToExecTasks(
+                                    traceId = traceSpanPair.first,
+                                    spanId = traceSpanPair.second,
+                                    extension,
+                                    project,
                                 )
                             }
                         } else {
@@ -155,6 +165,15 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                             val rootSpan = rootSpanBuilder.startSpan()
 
+                            if (extension.taskTraceEnvironmentEnabled.getOrElse(false)) {
+                                passTraceContextToExecTasks(
+                                    traceId = rootSpan.spanContext.traceId,
+                                    spanId = rootSpan.spanContext.spanId,
+                                    extension,
+                                    project,
+                                )
+                            }
+
                             val traceLogger = TraceLogger(extension.traceViewUrl.orNull, extension.traceViewType.orNull, project.logger)
 
                             val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, traceLogger, project.logger)
@@ -179,6 +198,20 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
             } else {
                 project.logger.info(PLUGIN_NOT_ENABLED_MESSAGE)
             }
+        }
+    }
+
+    private fun passTraceContextToExecTasks(
+        traceId: String,
+        spanId: String,
+        extension: OpenTelemetryBuildPluginExtension,
+        project: Project,
+    ) {
+        val execTasks: TaskCollection<Exec> = project.tasks.withType(Exec::class.java)
+
+        execTasks.forEach { task ->
+            task.environment[extension.taskTraceEnvironmentTraceIdName.get()] = traceId
+            task.environment[extension.taskTraceEnvironmentSpanIdName.get()] = spanId
         }
     }
 

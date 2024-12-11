@@ -6,6 +6,8 @@ import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.Assertions.assertLinesMatch
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import strikt.api.expectThat
 import strikt.assertions.*
 import java.io.File
@@ -16,8 +18,10 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
     override val oltpGrpcPort = 4401
     override val queryPort = 16688
 
-    @Test
+    @ParameterizedTest
+    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
     fun `should publish spans when using config-cache compatible listener with plugin config param`(
+        gradleVersion: String,
         @TempDir projectRootDirPath: Path,
     ) {
         val buildFileContents =
@@ -41,6 +45,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             GradleRunner.create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
+                .withGradleVersion(gradleVersion)
                 .withPluginClasspath()
                 .build()
 
