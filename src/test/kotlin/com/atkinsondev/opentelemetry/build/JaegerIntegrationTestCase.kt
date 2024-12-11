@@ -165,7 +165,10 @@ abstract class JaegerIntegrationTestCase {
         return rootSpans
     }
 
-    protected fun fetchTrace(traceId: String): JaegerApiResponse {
+    protected fun fetchTrace(
+        traceId: String,
+        verifyRootSpanId: Boolean = false,
+    ): JaegerApiResponse {
         println("Fetching trace $traceId")
         // Fetch trace data from Jaeger
         val httpClient = OkHttpClient.Builder().build()
@@ -183,14 +186,19 @@ abstract class JaegerIntegrationTestCase {
 
             responseBodyStr = resp.body!!.string()
 
-            val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
-            expectThat(apiResponse.data).hasSize(1)
-            expectThat(apiResponse.data.first().spans).isNotEmpty()
+            val trace = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
+            expectThat(trace.data).hasSize(1)
+            expectThat(trace.data.first().spans).isNotEmpty()
+
+            if (verifyRootSpanId) {
+                val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
+                expectThat(rootSpanId).isNotNull()
+            }
         }
 
-        val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
+        val trace = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
 
-        return apiResponse
+        return trace
     }
 
     protected fun fetchSpansWithDepth(traceId: String): List<SpanWithDepth> {

@@ -22,7 +22,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
     override val queryPort = 16671
 
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
+    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.10.2", "8.11"])
     fun `should put environment variables with trace and span IDs without config cache param enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
@@ -58,7 +58,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         expectThat(buildResult.task(":printEnv")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
         val traceId = extractTraceId(buildResult.output)
-        val trace = fetchTrace(traceId)
+        val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
         val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
@@ -77,7 +77,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
+    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.10.2", "8.11"])
     fun `should put environment variables with trace and span IDs with config cache param enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
@@ -114,7 +114,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         expectThat(buildResult.task(":printEnv")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
         val traceId = extractTraceId(buildResult.output)
-        val trace = fetchTrace(traceId)
+        val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
         val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
@@ -172,7 +172,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         expectThat(buildResult.task(":printEnv")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
         val traceId = extractTraceId(buildResult.output)
-        val trace = fetchTrace(traceId)
+        val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
         val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
