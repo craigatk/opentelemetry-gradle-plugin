@@ -76,7 +76,6 @@ class TestListenerService(
         ): String? =
             t?.let {
                 val stackTraceElements = t.stackTrace.toList()
-                t.stackTraceToString()
                 val stackTraceElementsToInclude = stackTraceElements.subList(0, min(stackTraceElements.size, maxDepth))
                 val stackTraceString = stackTraceElementsToInclude.joinToString("\nat ") + "\n..."
 

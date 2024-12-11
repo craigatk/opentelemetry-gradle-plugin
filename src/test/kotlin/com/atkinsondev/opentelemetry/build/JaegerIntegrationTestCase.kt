@@ -4,6 +4,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.GenericContainer
@@ -47,6 +48,8 @@ abstract class JaegerIntegrationTestCase {
         val tags: List<JaegerApiResponseTag>,
     ) {
         fun parentSpanId(): String? = references.firstOrNull()?.spanID
+
+        fun isRoot(): Boolean = references.isNullOrEmpty()
 
         override fun toString(): String = this.operationName
     }
@@ -165,6 +168,7 @@ abstract class JaegerIntegrationTestCase {
     }
 
     protected fun fetchTrace(traceId: String): JaegerApiResponse {
+        println("Fetching trace $traceId")
         // Fetch trace data from Jaeger
         val httpClient = OkHttpClient.Builder().build()
         val request =
@@ -172,9 +176,13 @@ abstract class JaegerIntegrationTestCase {
                 .url("http://localhost:${jaegerContainer.getMappedPort(queryPort)}/api/traces/$traceId")
                 .get()
                 .build()
-        val resp = httpClient.newCall(request).execute()
-        expectThat(resp.code).isEqualTo(200)
 
+        await().untilAsserted {
+            val resp = httpClient.newCall(request).execute()
+            expectThat(resp.code).isEqualTo(200)
+        }
+
+        val resp = httpClient.newCall(request).execute()
         val responseBodyStr = resp.body!!.string()
 
         val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr)
