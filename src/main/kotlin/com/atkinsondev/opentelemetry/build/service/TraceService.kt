@@ -89,7 +89,7 @@ abstract class TraceService : BuildService<TraceService.Params> {
 
     private val spanMap: MutableMap<String, Span> = mutableMapOf()
 
-    private fun start() {
+    fun start(): Pair<String, String> {
         val rootSpanName = "${parameters.getProjectName().get()}-build"
 
         val rootSpanBuilder =
@@ -119,6 +119,8 @@ abstract class TraceService : BuildService<TraceService.Params> {
         logger.debug("Starting trace service [{}]", this)
 
         started = true
+
+        return Pair(rootSpan.spanContext.traceId, rootSpan.spanContext.spanId)
     }
 
     fun createTaskSpan(executionResult: TaskExecutionResult): Span {

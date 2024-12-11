@@ -4,14 +4,13 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import org.awaitility.Awaitility.await
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
 import org.testcontainers.containers.GenericContainer
 import org.testcontainers.containers.wait.strategy.Wait
 import strikt.api.expectThat
-import strikt.assertions.isEqualTo
-import strikt.assertions.isGreaterThan
-import strikt.assertions.isNotNull
+import strikt.assertions.*
 
 abstract class JaegerIntegrationTestCase {
     private val json =
@@ -47,6 +46,8 @@ abstract class JaegerIntegrationTestCase {
         val tags: List<JaegerApiResponseTag>,
     ) {
         fun parentSpanId(): String? = references.firstOrNull()?.spanID
+
+        fun isRoot(): Boolean = references.isNullOrEmpty()
 
         override fun toString(): String = this.operationName
     }
@@ -164,7 +165,11 @@ abstract class JaegerIntegrationTestCase {
         return rootSpans
     }
 
-    protected fun fetchTrace(traceId: String): JaegerApiResponse {
+    protected fun fetchTrace(
+        traceId: String,
+        verifyRootSpanId: Boolean = false,
+    ): JaegerApiResponse {
+        println("Fetching trace $traceId")
         // Fetch trace data from Jaeger
         val httpClient = OkHttpClient.Builder().build()
         val request =
@@ -172,14 +177,28 @@ abstract class JaegerIntegrationTestCase {
                 .url("http://localhost:${jaegerContainer.getMappedPort(queryPort)}/api/traces/$traceId")
                 .get()
                 .build()
-        val resp = httpClient.newCall(request).execute()
-        expectThat(resp.code).isEqualTo(200)
 
-        val responseBodyStr = resp.body!!.string()
+        var responseBodyStr: String? = ""
 
-        val apiResponse = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr)
+        await().untilAsserted {
+            val resp = httpClient.newCall(request).execute()
+            expectThat(resp.code).isEqualTo(200)
 
-        return apiResponse
+            responseBodyStr = resp.body!!.string()
+
+            val trace = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
+            expectThat(trace.data).hasSize(1)
+            expectThat(trace.data.first().spans).isNotEmpty()
+
+            if (verifyRootSpanId) {
+                val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
+                expectThat(rootSpanId).isNotNull()
+            }
+        }
+
+        val trace = json.decodeFromString(JaegerApiResponse.serializer(), responseBodyStr!!)
+
+        return trace
     }
 
     protected fun fetchSpansWithDepth(traceId: String): List<SpanWithDepth> {

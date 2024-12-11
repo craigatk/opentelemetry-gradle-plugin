@@ -17,7 +17,7 @@ plugins {
 }
 
 group = "com.atkinsondev"
-version = "2.2.0"
+version = "2.3.0-RC-1"
 
 gradlePlugin {
     website = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
