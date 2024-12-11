@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertLinesMatch
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.MethodSource
 import strikt.api.expectThat
 import strikt.assertions.*
 import java.io.File
@@ -19,7 +19,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
     override val queryPort = 16688
 
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
     fun `should publish spans when using config-cache compatible listener with plugin config param`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,

@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Assertions.assertLinesMatch
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.MethodSource
 import strikt.api.expectThat
 import strikt.assertions.contains
 import strikt.assertions.hasSize
@@ -22,7 +22,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
     override val queryPort = 16671
 
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.10.2", "8.11"])
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
     fun `should put environment variables with trace and span IDs without config cache param enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
@@ -77,7 +77,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.10.2", "8.11"])
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
     fun `should put environment variables with trace and span IDs with config cache param enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
@@ -134,7 +134,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
 
     @Disabled("Doesn't work yet with config cache enabled")
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
     fun `should put environment variables with trace and span IDs with config cache enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
