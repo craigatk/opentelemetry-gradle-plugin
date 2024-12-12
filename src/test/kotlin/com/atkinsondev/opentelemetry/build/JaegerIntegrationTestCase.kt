@@ -122,7 +122,7 @@ abstract class JaegerIntegrationTestCase {
     @BeforeEach
     fun setup() {
         jaegerContainer =
-            GenericContainer("jaegertracing/all-in-one:1.57")
+            GenericContainer("jaegertracing/all-in-one:1.64.0")
                 .withExposedPorts(
                     healthCheckPort,
                     oltpGrpcPort,
