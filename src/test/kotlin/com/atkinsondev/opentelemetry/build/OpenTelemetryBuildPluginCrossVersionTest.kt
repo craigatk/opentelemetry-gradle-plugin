@@ -8,7 +8,7 @@ import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.ValueSource
+import org.junit.jupiter.params.provider.MethodSource
 import strikt.api.expectThat
 import strikt.assertions.isEqualTo
 import strikt.assertions.isNotNull
@@ -18,7 +18,7 @@ import java.nio.file.Path
 @WireMockTest
 class OpenTelemetryBuildPluginCrossVersionTest {
     @ParameterizedTest
-    @ValueSource(strings = ["8.0", "8.4", "8.5", "8.6", "8.10.2", "8.11"])
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
     fun `should send data to OpenTelemetry with HTTP with different Gradle versions`(
         gradleVersion: String,
         wmRuntimeInfo: WireMockRuntimeInfo,
