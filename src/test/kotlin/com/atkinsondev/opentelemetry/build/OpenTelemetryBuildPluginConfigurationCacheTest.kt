@@ -66,8 +66,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 "> :processResources",
                 "> :processTestResources",
                 "> :compileJava",
-                "> :classes",
-                "> :jar",
+                "> (:jar|:classes)",
+                "> (:jar|:classes)",
                 "> :compileTestKotlin",
                 "> :compileTestJava",
                 "> :testClasses",
@@ -130,8 +130,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 "> :processResources",
                 "> :processTestResources",
                 "> :compileJava",
-                "> :classes",
-                "> :jar",
+                "> (:jar|:classes)",
+                "> (:jar|:classes)",
                 "> :compileTestKotlin",
                 "> :compileTestJava",
                 "> :testClasses",
@@ -242,6 +242,47 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             ),
             testSpanNames,
         )
+    }
+
+    @Test
+    fun `should publish spans when using config-cache compatible listener with config-cache enabled and running help task`(
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        val buildResult =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("help", "--configuration-cache", "--info", "--stacktrace")
+                .withEnvironment(mapOf("JAVA_OPTS" to "--add-opens=java.base/java.util=ALL-UNNAMED"))
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":help")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        println(buildResult.output)
+
+        expectThat(buildResult.output).contains("0 problems were found storing the configuration cache")
+
+        // Parse trace ID from build output
+        val traceId = extractTraceId(buildResult.output)
+
+        val orderedSpansWithDepth = fetchSpansWithDepth(traceId)
+
+        expectThat(orderedSpansWithDepth.first().operationName).matches("junit-\\d+-build".toRegex())
+        expectThat(orderedSpansWithDepth).any { get { operationName }.isEqualTo(":help") }
     }
 
     @Test
