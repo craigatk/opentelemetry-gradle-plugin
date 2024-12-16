@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "3.0.0"
+    id 'com.atkinsondev.opentelemetry-build' version "3.0.1"
 }
 ```
 
@@ -267,7 +267,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "3.0.0"
+  id 'com.atkinsondev.opentelemetry-build' version "3.0.1"
 }
 
 openTelemetryBuild {
@@ -286,6 +286,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 3.0.1
+  * Handle missing value exception when using configuration cache and no tests are run in the build
 * 3.0.0
   * **Breaking change**: minimum supported version of Gradle is now Gradle 8.0
   * Added support passing trace ID and span ID as environment variables to `Exec` tasks
