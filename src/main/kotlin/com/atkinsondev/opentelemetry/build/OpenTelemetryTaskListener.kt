@@ -9,6 +9,7 @@ import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_OUTCOME_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_PATH_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_TYPE_KEY
+import com.atkinsondev.opentelemetry.build.model.TaskTraceEnvironmentConfig
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.Tracer
@@ -17,6 +18,7 @@ import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.internal.tasks.TaskStateInternal
 import org.gradle.api.logging.Logger
+import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskState
 import org.gradle.api.tasks.testing.Test
 import java.util.concurrent.ConcurrentHashMap
@@ -27,6 +29,7 @@ class OpenTelemetryTaskListener(
     private val baggage: Baggage,
     private val logger: Logger,
     private val nestedTestSpans: Boolean,
+    private val taskTraceEnvironmentConfig: TaskTraceEnvironmentConfig,
 ) : TaskExecutionListener {
     private val taskSpanMap = ConcurrentHashMap<String, Span>()
 
@@ -54,6 +57,15 @@ class OpenTelemetryTaskListener(
                     nestedTestSpans = nestedTestSpans,
                 )
             task.addTestListener(testListener)
+        }
+
+        if (taskTraceEnvironmentConfig.enabled && task is Exec) {
+            val traceId = span.spanContext.traceId
+            val spanId = span.spanContext.spanId
+
+            task.environment[taskTraceEnvironmentConfig.traceIdName] = traceId
+            task.environment[taskTraceEnvironmentConfig.spanIdName] = spanId
+            task.environment[taskTraceEnvironmentConfig.traceParentName] = "00-$traceId-$spanId-01"
         }
 
         taskSpanMap[taskKey] = span
