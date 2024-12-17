@@ -1,5 +1,6 @@
 package com.atkinsondev.opentelemetry.build
 
+import com.atkinsondev.opentelemetry.build.model.TaskTraceEnvironmentConfig
 import com.atkinsondev.opentelemetry.build.util.FakeSpanBuilder
 import com.atkinsondev.opentelemetry.build.util.FakeTracer
 import com.atkinsondev.opentelemetry.build.util.NoopLogger
@@ -32,6 +33,7 @@ class OpenTelemetryTaskListenerTest {
                 baggage = Baggage.builder().build(),
                 logger = NoopLogger(),
                 nestedTestSpans = false,
+                taskTraceEnvironmentConfig = TaskTraceEnvironmentConfig(false),
             )
 
         val testTask = mockk<org.gradle.api.tasks.testing.Test>(relaxed = true)
@@ -68,6 +70,7 @@ class OpenTelemetryTaskListenerTest {
                 baggage = Baggage.builder().build(),
                 logger = NoopLogger(),
                 nestedTestSpans = false,
+                taskTraceEnvironmentConfig = TaskTraceEnvironmentConfig(false),
             )
 
         val testTask = mockk<org.gradle.api.tasks.testing.Test>(relaxed = true)

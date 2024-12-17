@@ -8,4 +8,9 @@ object GradleTestVersions {
     fun versions(): Stream<String> {
         return Stream.of("8.0", "8.4", "8.5", "8.7", "8.10.2", GradleVersion.current().version)
     }
+
+    @JvmStatic
+    fun latestVersion(): Stream<String> {
+        return Stream.of(GradleVersion.current().version)
+    }
 }

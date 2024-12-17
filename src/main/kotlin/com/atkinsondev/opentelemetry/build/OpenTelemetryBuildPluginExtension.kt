@@ -24,6 +24,7 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val taskTraceEnvironmentEnabled: Property<Boolean>
     abstract val taskTraceEnvironmentSpanIdName: Property<String>
     abstract val taskTraceEnvironmentTraceIdName: Property<String>
+    abstract val taskTraceEnvironmentTraceParentName: Property<String>
 
     init {
         exporterMode.convention(OpenTelemetryExporterMode.GRPC)
@@ -39,5 +40,6 @@ abstract class OpenTelemetryBuildPluginExtension {
         taskTraceEnvironmentEnabled.convention(false)
         taskTraceEnvironmentSpanIdName.convention("SPAN_ID")
         taskTraceEnvironmentTraceIdName.convention("TRACE_ID")
+        taskTraceEnvironmentTraceParentName.convention("TRACEPARENT")
     }
 }

@@ -44,7 +44,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
             """.trimIndent()
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
-        val scriptFileContents = "echo traceid: \$TRACE_ID spanid: \$SPAN_ID".trimIndent()
+        val scriptFileContents = "echo traceid: \$TRACE_ID spanid: \$SPAN_ID traceparent: \$TRACEPARENT".trimIndent()
         File(projectRootDirPath.toFile(), "script.sh").writeText(scriptFileContents)
 
         val buildResult =
@@ -61,10 +61,11 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
-        val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
-        expectThat(rootSpanId).isNotNull()
+        val execTaskSpanId = trace.data.first().spans.find { it.operationName == ":printEnv" }?.spanID
 
-        expectThat(buildResult.output).contains("traceid: $traceId spanid: $rootSpanId")
+        val outputLine = buildResult.output.lines().find { it.contains("traceid") }
+        val expectedTraceParent = "00-$traceId-$execTaskSpanId-01"
+        expectThat(outputLine).isNotNull().contains("traceid: $traceId spanid: $execTaskSpanId traceparent: $expectedTraceParent")
 
         val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
         assertLinesMatch(
@@ -100,7 +101,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
             """.trimIndent()
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
-        val scriptFileContents = "echo traceid: \$TRACE_ID spanid: \$SPAN_ID".trimIndent()
+        val scriptFileContents = "echo traceid: \$TRACE_ID spanid: \$SPAN_ID traceparent: \$TRACEPARENT".trimIndent()
         File(projectRootDirPath.toFile(), "script.sh").writeText(scriptFileContents)
 
         val buildResult =
@@ -120,7 +121,9 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
         expectThat(rootSpanId).isNotNull()
 
-        expectThat(buildResult.output).contains("traceid: $traceId spanid: $rootSpanId")
+        val outputLine = buildResult.output.lines().find { it.contains("traceid") }
+        val expectedTraceParent = "00-$traceId-$rootSpanId-01"
+        expectThat(outputLine).isNotNull().contains("traceid: $traceId spanid: $rootSpanId traceparent: $expectedTraceParent")
 
         val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
         assertLinesMatch(
@@ -157,7 +160,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
             """.trimIndent()
         File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
 
-        val scriptFileContents = "echo traceid: \$TRACE_ID spanid: \$SPAN_ID".trimIndent()
+        val scriptFileContents = "echo traceid: \$TRACE_ID spanid: \$SPAN_ID traceparent: \$TRACEPARENT".trimIndent()
         File(projectRootDirPath.toFile(), "script.sh").writeText(scriptFileContents)
 
         val buildResult =
@@ -178,7 +181,9 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
         expectThat(rootSpanId).isNotNull()
 
-        expectThat(buildResult.output).contains("traceid: $traceId spanid: $rootSpanId")
+        val outputLine = buildResult.output.lines().find { it.contains("traceid") }
+        val expectedTraceParent = "00-$traceId-$rootSpanId-01"
+        expectThat(outputLine).isNotNull().contains("traceid: $traceId spanid: $rootSpanId traceparent: $expectedTraceParent")
 
         val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
         assertLinesMatch(

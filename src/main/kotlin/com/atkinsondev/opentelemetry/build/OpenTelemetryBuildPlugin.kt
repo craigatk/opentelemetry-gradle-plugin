@@ -3,6 +3,7 @@ package com.atkinsondev.opentelemetry.build
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
+import com.atkinsondev.opentelemetry.build.model.TaskTraceEnvironmentConfig
 import com.atkinsondev.opentelemetry.build.service.*
 import io.opentelemetry.api.baggage.Baggage
 import io.opentelemetry.api.trace.Span
@@ -49,6 +50,14 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                         }
 
                     if (headers != null) {
+                        val taskTraceEnvironmentConfig =
+                            TaskTraceEnvironmentConfig(
+                                enabled = extension.taskTraceEnvironmentEnabled.getOrElse(false),
+                                traceIdName = extension.taskTraceEnvironmentTraceIdName.get(),
+                                spanIdName = extension.taskTraceEnvironmentSpanIdName.get(),
+                                traceParentName = extension.taskTraceEnvironmentTraceParentName.get(),
+                            )
+
                         // org.gradle.api.configuration.BuildFeatures class was added in Gradle 8.5
                         // otherwise fall back to the plugin extension parameter
                         val configurationCacheRequested =
@@ -108,13 +117,13 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                 testTask.addTestListener(testListener)
                             }
 
-                            if (extension.taskTraceEnvironmentEnabled.getOrElse(false)) {
+                            if (taskTraceEnvironmentConfig.enabled) {
                                 val traceSpanPair = traceServiceProvider.get().start()
 
                                 passTraceContextToExecTasks(
                                     traceId = traceSpanPair.first,
                                     spanId = traceSpanPair.second,
-                                    extension,
+                                    taskTraceEnvironmentConfig,
                                     project,
                                 )
                             }
@@ -165,15 +174,6 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                             val rootSpan = rootSpanBuilder.startSpan()
 
-                            if (extension.taskTraceEnvironmentEnabled.getOrElse(false)) {
-                                passTraceContextToExecTasks(
-                                    traceId = rootSpan.spanContext.traceId,
-                                    spanId = rootSpan.spanContext.spanId,
-                                    extension,
-                                    project,
-                                )
-                            }
-
                             val traceLogger = TraceLogger(extension.traceViewUrl.orNull, extension.traceViewType.orNull, project.logger)
 
                             val buildListener = OpenTelemetryBuildListener(rootSpan, openTelemetry, traceLogger, project.logger)
@@ -186,6 +186,7 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                     baggage = baggage,
                                     logger = project.logger,
                                     nestedTestSpans = extension.nestedTestSpans.get(),
+                                    taskTraceEnvironmentConfig = taskTraceEnvironmentConfig,
                                 )
                             project.gradle.addListener(taskListener)
                         }
@@ -204,14 +205,15 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
     private fun passTraceContextToExecTasks(
         traceId: String,
         spanId: String,
-        extension: OpenTelemetryBuildPluginExtension,
+        config: TaskTraceEnvironmentConfig,
         project: Project,
     ) {
         val execTasks: TaskCollection<Exec> = project.tasks.withType(Exec::class.java)
 
         execTasks.forEach { task ->
-            task.environment[extension.taskTraceEnvironmentTraceIdName.get()] = traceId
-            task.environment[extension.taskTraceEnvironmentSpanIdName.get()] = spanId
+            task.environment[config.traceIdName] = traceId
+            task.environment[config.spanIdName] = spanId
+            task.environment[config.traceParentName] = "00-$traceId-$spanId-01"
         }
     }
 
