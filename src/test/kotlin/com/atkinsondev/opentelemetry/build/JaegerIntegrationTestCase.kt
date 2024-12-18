@@ -108,6 +108,16 @@ abstract class JaegerIntegrationTestCase {
         override fun toString(): String = ">".repeat(depth) + " $operationName"
 
         fun allStrings(): List<String> = listOf(this.toString()) + children.flatMap { it.allStrings() }
+
+        fun expectThatSpanIsAfter(
+            earlierSpanName: String,
+            allSpans: List<ResponseSpan>,
+        ) {
+            val earlierSpan = allSpans.find { it.operationName == earlierSpanName }
+            expectThat(earlierSpan).isNotNull()
+
+            expectThat(startTime).isGreaterThan(earlierSpan!!.startTime)
+        }
     }
 
     data class ResponseSpanTag(

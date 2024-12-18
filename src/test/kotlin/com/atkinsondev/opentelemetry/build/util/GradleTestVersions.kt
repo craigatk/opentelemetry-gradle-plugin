@@ -10,7 +10,7 @@ object GradleTestVersions {
     }
 
     @JvmStatic
-    fun latestVersion(): Stream<String> {
+    fun currentVersion(): Stream<String> {
         return Stream.of(GradleVersion.current().version)
     }
 }

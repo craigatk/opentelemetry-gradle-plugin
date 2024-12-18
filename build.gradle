@@ -17,7 +17,7 @@ plugins {
 }
 
 group = "com.atkinsondev"
-version = "3.1.0"
+version = "3.1.1"
 
 gradlePlugin {
     website = 'https://github.com/craigatk/opentelemetry-gradle-plugin'
@@ -80,7 +80,6 @@ openTelemetryBuild {
             "x-honeycomb-dataset": "otel-gradle"
     ]
     traceViewUrl = "https://ui.honeycomb.io/otel-gradle/environments/dev/datasets/gradle-builds/trace?trace_id={traceId}"
-    supportConfigCache = true
     taskTraceEnvironmentEnabled = true
 }
 

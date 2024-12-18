@@ -89,8 +89,6 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                     spec.parameters.getTraceViewUrl().set(extension.traceViewUrl)
                                     spec.parameters.getTraceViewType().set(extension.traceViewType)
 
-                                    spec.parameters.getBuildStartTimeMilli().set(Instant.now().toEpochMilli())
-
                                     spec.parameters.getParentSpanIdEnvVarName().set(extension.parentSpanIdEnvVarName)
                                     spec.parameters.getParentTraceIdEnvVarName().set(extension.parentTraceIdEnvVarName)
                                 }
@@ -118,7 +116,7 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                             }
 
                             if (taskTraceEnvironmentConfig.enabled) {
-                                val traceSpanPair = traceServiceProvider.get().start()
+                                val traceSpanPair = traceServiceProvider.get().start(Instant.now())
 
                                 passTraceContextToExecTasks(
                                     traceId = traceSpanPair.first,

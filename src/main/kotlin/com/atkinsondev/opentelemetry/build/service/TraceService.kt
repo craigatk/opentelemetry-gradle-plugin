@@ -55,8 +55,6 @@ abstract class TraceService : BuildService<TraceService.Params> {
 
         fun getTraceViewType(): Property<TraceViewType>
 
-        fun getBuildStartTimeMilli(): Property<Long>
-
         fun getParentSpanIdEnvVarName(): Property<String>
 
         fun getParentTraceIdEnvVarName(): Property<String>
@@ -89,14 +87,14 @@ abstract class TraceService : BuildService<TraceService.Params> {
 
     private val spanMap: MutableMap<String, Span> = mutableMapOf()
 
-    fun start(): Pair<String, String> {
+    fun start(buildStartTime: Instant): Pair<String, String> {
         val rootSpanName = "${parameters.getProjectName().get()}-build"
 
         val rootSpanBuilder =
             tracer.spanBuilder(rootSpanName)
                 .setAttribute("build.task.names", parameters.getTaskNames().get().joinToString(" "))
                 .addBaggage(baggage)
-                .setStartTimestamp(Instant.ofEpochMilli(parameters.getBuildStartTimeMilli().get()))
+                .setStartTimestamp(buildStartTime.minusMillis(10))
 
         val parenSpanContext =
             ParentSpan.parentSpanContext(
@@ -125,7 +123,7 @@ abstract class TraceService : BuildService<TraceService.Params> {
 
     fun createTaskSpan(executionResult: TaskExecutionResult): Span {
         if (!started) {
-            start()
+            start(executionResult.startTime)
         }
 
         val spanBuilder =
