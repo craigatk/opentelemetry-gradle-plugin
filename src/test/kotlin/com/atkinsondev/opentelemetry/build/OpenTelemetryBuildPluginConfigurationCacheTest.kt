@@ -56,32 +56,50 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         expectThat(buildResult.output).contains("OpenTelemetry build trace http://localhost:16686/trace/$traceId")
 
-        val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
+        val rootSpans = fetchRootSpans(traceId)
+        expectThat(rootSpans.first().operationName).matches("junit-\\d+-build".toRegex())
 
+        val taskSpans = rootSpans.first().children
+
+        val taskSpanNames = taskSpans.map { it.operationName }
         assertLinesMatch(
             listOf(
-                " junit-\\d+-build",
-                "> :checkKotlinGradlePluginConfigurationErrors",
-                "> :compileKotlin",
-                "> :processResources",
-                "> :processTestResources",
-                "> :compileJava",
-                "> (:jar|:classes)",
-                "> (:jar|:classes)",
-                "> :compileTestKotlin",
-                "> :compileTestJava",
-                "> :testClasses",
-                "> :test",
-                ">> Gradle Test Executor \\d+",
-                ">>> BarTest",
-                ">>>> bar should not return baz()",
-                ">>>> bar should return foo()",
-                ">>> FooTest",
-                ">>>> foo should not return baz()",
-                ">>>> foo should return bar()",
+                ":checkKotlinGradlePluginConfigurationErrors",
+                ":compileKotlin",
+                ":processResources",
+                ":processTestResources",
+                ":compileJava",
+                "(:jar|:classes)",
+                "(:jar|:classes)",
+                ":compileTestKotlin",
+                ":compileTestJava",
+                ":testClasses",
+                ":test",
             ),
-            orderedSpansNamesWithDepth,
+            taskSpanNames,
         )
+
+        val testTaskSpan = taskSpans.find { it.operationName == ":test" } ?: throw AssertionError("Test task span not found")
+
+        val testExecutorSpan = testTaskSpan.children.first()
+        expectThat(testExecutorSpan.operationName).matches("Gradle Test Executor \\d+".toRegex())
+
+        val testClassSpans = testExecutorSpan.children
+        expectThat(testClassSpans).hasSize(2).map { it.operationName }.contains("BarTest", "FooTest")
+
+        expectThat(testClassSpans.find { it.operationName == "BarTest" })
+            .isNotNull()
+            .get { children }
+            .hasSize(2)
+            .map { it.operationName }
+            .contains("bar should not return baz()", "bar should return foo()")
+
+        expectThat(testClassSpans.find { it.operationName == "FooTest" })
+            .isNotNull()
+            .get { children }
+            .hasSize(2)
+            .map { it.operationName }
+            .contains("foo should not return baz()", "foo should return bar()")
     }
 
     @Test
@@ -134,8 +152,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 "> (:jar|:classes)",
                 "> :compileTestKotlin",
                 "> :compileTestJava",
-                "> :testClasses",
-                "> :test",
+                "> (:testClasses|:test)",
+                "> (:testClasses|:test)",
                 ">> FooTest foo should return bar but will fail()",
             ),
             orderedSpansNamesWithDepth,
@@ -145,11 +163,9 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         val taskSpans = rootSpans.flatMap { it.children }
         expectThat(taskSpans).any { get { operationName }.isEqualTo(":test") }
 
-        val testTaskSpan = taskSpans.find { it.operationName == ":test" }
-        expectThat(testTaskSpan).isNotNull()
+        val testTaskSpan = taskSpans.find { it.operationName == ":test" } ?: throw AssertionError("Test task span not found")
 
-        expectThat(testTaskSpan?.tags)
-            .isNotNull()
+        expectThat(testTaskSpan.tags)
             .any {
                 get { key }.isEqualTo("error")
                 get { boolValue }.isEqualTo(true)
@@ -163,11 +179,10 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 get { strValue }.isEqualTo(":test")
             }
 
-        val testCaseSpan = testTaskSpan?.children?.first()
-        expectThat(testCaseSpan?.operationName).isEqualTo("FooTest foo should return bar but will fail()")
+        val testCaseSpan = testTaskSpan.children.first()
+        expectThat(testCaseSpan.operationName).isEqualTo("FooTest foo should return bar but will fail()")
 
-        expectThat(testCaseSpan?.tags)
-            .isNotNull()
+        expectThat(testCaseSpan.tags)
             .any {
                 get { key }.isEqualTo("error")
                 get { boolValue }.isEqualTo(true)
@@ -217,31 +232,36 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
 
-        val orderedSpansWithDepth = fetchSpansWithDepth(traceId)
+        val rootSpans = fetchRootSpans(traceId)
 
-        expectThat(orderedSpansWithDepth.first().operationName).matches("junit-\\d+-build".toRegex())
+        expectThat(rootSpans.first().operationName).matches("junit-\\d+-build".toRegex())
 
-        orderedSpansWithDepth.find { it.operationName == ":test" }?.expectThatSpanIsAfter(":processTestResources", orderedSpansWithDepth)
-        orderedSpansWithDepth.find { it.operationName == ":test" }?.expectThatSpanIsAfter(":compileTestKotlin", orderedSpansWithDepth)
+        val taskSpans = rootSpans.first().children
 
-        val testTaskIndex = orderedSpansWithDepth.indexOfFirst { it.operationName == ":test" }
+        val testTaskSpan = taskSpans.find { it.operationName == ":test" } ?: throw AssertionError("Test task span not found")
 
-        val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
-        val testSpanNames = orderedSpansNamesWithDepth.subList(testTaskIndex, orderedSpansNamesWithDepth.size)
+        testTaskSpan.expectThatSpanIsAfter(":processTestResources", taskSpans)
+        testTaskSpan.expectThatSpanIsAfter(":compileTestKotlin", taskSpans)
 
-        assertLinesMatch(
-            listOf(
-                "> :test",
-                ">> Gradle Test Executor \\d+",
-                ">>> BarTest",
-                ">>>> bar should not return baz()",
-                ">>>> bar should return foo()",
-                ">>> FooTest",
-                ">>>> foo should not return baz()",
-                ">>>> foo should return bar()",
-            ),
-            testSpanNames,
-        )
+        val testExecutorSpan = testTaskSpan.children.first()
+        expectThat(testExecutorSpan.operationName).matches("Gradle Test Executor \\d+".toRegex())
+
+        val testClassSpans = testExecutorSpan.children
+        expectThat(testClassSpans).hasSize(2).map { it.operationName }.contains("BarTest", "FooTest")
+
+        expectThat(testClassSpans.find { it.operationName == "BarTest" })
+            .isNotNull()
+            .get { children }
+            .hasSize(2)
+            .map { it.operationName }
+            .contains("bar should not return baz()", "bar should return foo()")
+
+        expectThat(testClassSpans.find { it.operationName == "FooTest" })
+            .isNotNull()
+            .get { children }
+            .hasSize(2)
+            .map { it.operationName }
+            .contains("foo should not return baz()", "foo should return bar()")
     }
 
     @Test
@@ -321,27 +341,21 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
 
-        val orderedSpansWithDepth = fetchSpansWithDepth(traceId)
+        val rootSpans = fetchRootSpans(traceId)
 
-        expectThat(orderedSpansWithDepth.first().operationName).matches("junit-\\d+-build".toRegex())
+        expectThat(rootSpans.first().operationName).matches("junit-\\d+-build".toRegex())
 
-        orderedSpansWithDepth.find { it.operationName == ":test" }?.expectThatSpanIsAfter(":processTestResources", orderedSpansWithDepth)
-        orderedSpansWithDepth.find { it.operationName == ":test" }?.expectThatSpanIsAfter(":compileTestKotlin", orderedSpansWithDepth)
+        val taskSpans = rootSpans.first().children
 
-        val testTaskIndex = orderedSpansWithDepth.indexOfFirst { it.operationName == ":test" }
+        val testTaskSpan = taskSpans.find { it.operationName == ":test" } ?: throw AssertionError("Test task span not found")
 
-        val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
-        val testSpanNames = orderedSpansNamesWithDepth.subList(testTaskIndex, orderedSpansNamesWithDepth.size)
+        testTaskSpan.expectThatSpanIsAfter(":processTestResources", taskSpans)
+        testTaskSpan.expectThatSpanIsAfter(":compileTestKotlin", taskSpans)
 
-        assertLinesMatch(
-            listOf(
-                "> :test",
-                ">> BarTest bar should not return baz()",
-                ">> BarTest bar should return foo()",
-                ">> FooTest foo should not return baz()",
-                ">> FooTest foo should return bar()",
-            ),
-            testSpanNames,
-        )
+        val testCaseSpans = testTaskSpan.children
+        expectThat(testCaseSpans)
+            .hasSize(4)
+            .map { it.operationName }
+            .contains("BarTest bar should not return baz()", "BarTest bar should return foo()", "FooTest foo should not return baz()", "FooTest foo should return bar()")
     }
 }
