@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "3.1.0"
+    id 'com.atkinsondev.opentelemetry-build' version "3.1.1"
 }
 ```
 
@@ -233,7 +233,7 @@ The plugin is compatible with Java 17+ and Gradle versions `8.0` and higher.
 
 #### Gradle configuration cache
 
-There is experimental support for using this plugin with the [Gradle configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html) starting with version `2.2.0` of the plugin.
+There is experimental support for using this plugin with the [Gradle configuration cache](https://docs.gradle.org/current/userguide/configuration_cache.html).
 
 To use the plugin with the configuration cache:
 
@@ -269,7 +269,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "3.1.0"
+  id 'com.atkinsondev.opentelemetry-build' version "3.1.1"
 }
 
 openTelemetryBuild {
@@ -288,6 +288,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 3.1.1
+  * Fixing root span start time when using configuration cache
 * 3.1.0
   * Adding TRACEPARENT env variable for Exec tasks
   * Fixing Exec task parent span
