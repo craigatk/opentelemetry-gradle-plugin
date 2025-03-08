@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "3.1.1"
+    id 'com.atkinsondev.opentelemetry-build' version "3.2.0"
 }
 ```
 
@@ -269,7 +269,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "3.1.1"
+  id 'com.atkinsondev.opentelemetry-build' version "3.2.0"
 }
 
 openTelemetryBuild {
@@ -288,6 +288,9 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 3.2.0
+  * Upgrading to OpenTelemetry 1.48.0
+  * Upgrading to Kotlin 2.0.21 and Gradle 8.13
 * 3.1.1
   * Fixing root span start time when using configuration cache
 * 3.1.0
