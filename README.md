@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "3.2.0"
+    id 'com.atkinsondev.opentelemetry-build' version "4.0.0"
 }
 ```
 
@@ -227,7 +227,7 @@ openTelemetryBuild {
 
 ## Compatibility
 
-The plugin is compatible with Java 17+ and Gradle versions `8.0` and higher.
+The plugin is compatible with Java 21+ and Gradle versions `8.4` and higher.
 
 ### Limitations
 
@@ -269,7 +269,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "3.2.0"
+  id 'com.atkinsondev.opentelemetry-build' version "4.0.0"
 }
 
 openTelemetryBuild {
@@ -288,6 +288,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.0.0
+  * **Breaking change**: plugin now requires Java 21+ and Gradle 8.4+
 * 3.2.0
   * Upgrading to OpenTelemetry 1.48.0
   * Upgrading to Kotlin 2.0.21 and Gradle 8.13
