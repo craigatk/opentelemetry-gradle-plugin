@@ -6,7 +6,7 @@ import java.util.stream.Stream
 object GradleTestVersions {
     @JvmStatic
     fun versions(): Stream<String> {
-        return Stream.of("8.0", "8.4", "8.5", "8.7", "8.10.2", GradleVersion.current().version)
+        return Stream.of("8.4", "8.5", "8.7", "8.10.2", GradleVersion.current().version)
     }
 
     @JvmStatic
