@@ -121,7 +121,7 @@ fun baseKotlinBuildFileContents(): String =
     }
 
     plugins {
-        id("org.jetbrains.kotlin.jvm") version "1.9.10"
+        id("org.jetbrains.kotlin.jvm") version "2.0.21"
         id("com.atkinsondev.opentelemetry-build")
     }
     
