@@ -288,6 +288,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.1.0
+  * Upgrading to OpenTelemetry 1.49.0 and Gradle 8.14
 * 4.0.0
   * **Breaking change**: plugin now requires Java 21+ and Gradle 8.4+
 * 3.2.0
