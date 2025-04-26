@@ -45,13 +45,9 @@ class OpenTelemetryTestListenerTest {
                 "test failure message",
                 "failure.Klass",
                 "stacktrace",
-                true,
-                false,
-                "true",
-                "false",
-                "true".toByteArray(),
-                "false".toByteArray(),
             )
+
+        val testFailure = DefaultTestFailure(RuntimeException("test failure"), testFailureDetails, listOf())
 
         val testResult =
             DefaultTestResult(
@@ -61,7 +57,8 @@ class OpenTelemetryTestListenerTest {
                 1,
                 0,
                 1,
-                listOf(DefaultTestFailure(RuntimeException("test failure"), testFailureDetails, listOf())),
+                listOf(testFailure),
+                testFailure,
             )
 
         openTelemetryTestListener.beforeTest(testDescriptor)
@@ -104,6 +101,7 @@ class OpenTelemetryTestListenerTest {
                 1,
                 0,
                 listOf(),
+                null,
             )
 
         openTelemetryTestListener.beforeTest(testDescriptor)
