@@ -245,19 +245,20 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         val taskSpans = rootSpans.first().children
 
-        val expectedTaskOutcomes = mapOf(
-            ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
-            ":compileKotlin" to "EXECUTED",
-            ":processResources" to "NO-SOURCE",
-            ":processTestResources" to "NO-SOURCE",
-            ":compileJava" to "NO-SOURCE",
-            ":classes" to "UP-TO-DATE",
-            ":jar" to "EXECUTED",
-            ":compileTestKotlin" to "EXECUTED",
-            ":compileTestJava" to "NO-SOURCE",
-            ":testClasses" to "UP-TO-DATE",
-            ":test" to "EXECUTED",
-        )
+        val expectedTaskOutcomes = 
+            mapOf(
+                ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
+                ":compileKotlin" to "EXECUTED",
+                ":processResources" to "NO-SOURCE",
+                ":processTestResources" to "NO-SOURCE",
+                ":compileJava" to "NO-SOURCE",
+                ":classes" to "UP-TO-DATE",
+                ":jar" to "EXECUTED",
+                ":compileTestKotlin" to "EXECUTED",
+                ":compileTestJava" to "NO-SOURCE",
+                ":testClasses" to "UP-TO-DATE",
+                ":test" to "EXECUTED",
+            )
 
         val taskSpanNames = taskSpans.map { it.operationName }.sorted()
 
@@ -288,19 +289,20 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         val secondTraceId = extractTraceId(secondBuildResult.output)
         val secondTaskSpans = fetchRootSpans(secondTraceId).first().children
 
-        val expectedSecondTaskOutcomes = mapOf(
-            ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
-            ":compileKotlin" to "FROM-CACHE",
-            ":processResources" to "NO-SOURCE",
-            ":processTestResources" to "NO-SOURCE",
-            ":compileJava" to "NO-SOURCE",
-            ":classes" to "UP-TO-DATE",
-            ":jar" to "EXECUTED",
-            ":compileTestKotlin" to "FROM-CACHE",
-            ":compileTestJava" to "NO-SOURCE",
-            ":testClasses" to "UP-TO-DATE",
-            ":test" to "FROM-CACHE",
-        )
+        val expectedSecondTaskOutcomes = 
+            mapOf(
+                ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
+                ":compileKotlin" to "FROM-CACHE",
+                ":processResources" to "NO-SOURCE",
+                ":processTestResources" to "NO-SOURCE",
+                ":compileJava" to "NO-SOURCE",
+                ":classes" to "UP-TO-DATE",
+                ":jar" to "EXECUTED",
+                ":compileTestKotlin" to "FROM-CACHE",
+                ":compileTestJava" to "NO-SOURCE",
+                ":testClasses" to "UP-TO-DATE",
+                ":test" to "FROM-CACHE",
+            )
 
         val secondTaskSpanNames = secondTaskSpans.map { it.operationName }.sorted()
 
@@ -321,7 +323,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 .tags
                 .first { it.key == "task.execution_reasons" }
                 .strValue
-                ?.replace(Regex("file.*\\.jar"), "file junit.jar")
+                ?.replace(Regex("file.*\\.jar"), "file junit.jar"),
         )
             .describedAs { ":jar span attribute `task.execution_reasons`" }
             .isEqualTo("Output property 'archiveFile' file junit.jar has been removed.")
@@ -489,13 +491,19 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             .contains("BarTest bar should not return baz()", "BarTest bar should return foo()", "FooTest foo should not return baz()", "FooTest foo should return bar()")
     }
 
-    private fun ResponseSpan.assertStrAttributeEquals(attributeKey: String, expectedValue: String?) {
+    private fun ResponseSpan.assertStrAttributeEquals(
+        attributeKey: String,
+        expectedValue: String?,
+    ) {
         expectThat(tags.first { it.key == attributeKey }.strValue)
             .describedAs { "$operationName span attribute `$attributeKey`" }
             .isEqualTo(expectedValue)
     }
 
-    private fun ResponseSpan.assertBoolAttributeEquals(attributeKey: String, expectedValue: Boolean?) {
+    private fun ResponseSpan.assertBoolAttributeEquals(
+        attributeKey: String,
+        expectedValue: Boolean?,
+    ) {
         expectThat(tags.first { it.key == attributeKey }.boolValue)
             .describedAs { "$operationName span attribute `$attributeKey`" }
             .isEqualTo(expectedValue)
