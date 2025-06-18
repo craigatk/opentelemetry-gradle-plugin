@@ -11,6 +11,7 @@ import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NA
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILED_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILURE_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_OUTCOME_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_PATH_KEY
 import com.atkinsondev.opentelemetry.build.service.model.TaskExecutionResult
 import com.atkinsondev.opentelemetry.build.service.model.TestExecutionResult
@@ -134,6 +135,7 @@ abstract class TraceService : BuildService<TraceService.Params> {
                 .setStartTimestamp(executionResult.startTime)
                 .setAttribute(TASK_NAME_KEY, executionResult.name)
                 .setAttribute(TASK_PATH_KEY, executionResult.path)
+                .setAttribute(TASK_OUTCOME_KEY, executionResult.outcome)
 
         if (executionResult.failed) {
             spanBuilder.setAttribute(ERROR_KEY, true)

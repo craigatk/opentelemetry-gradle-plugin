@@ -242,6 +242,11 @@ To use the plugin with the configuration cache:
 
 Due to the fundamental plugin changes required to work with the configuration cache, not all span attributes are supported when the configuration cache is in use.
 
+| Unsupported span attribute | Description                                                                       |
+|----------------------------|-----------------------------------------------------------------------------------|
+| `task.type`                | Full package and class name of the task, e.g. `org.gradle.api.tasks.testing.Test` |
+| `task.did_work`            | Whether the task did work (boolean)                                               |
+
 ##### Trace and span ID environment variables
 
 Passing trace and span ID environment variables to `Exec` tasks does not work when the configuration cache is enabled.

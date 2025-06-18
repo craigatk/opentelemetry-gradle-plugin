@@ -13,7 +13,10 @@ import org.gradle.tooling.events.FailureResult
 import org.gradle.tooling.events.FinishEvent
 import org.gradle.tooling.events.OperationCompletionListener
 import org.gradle.tooling.events.task.TaskFinishEvent
+import org.gradle.tooling.events.task.TaskSkippedResult
+import org.gradle.tooling.events.task.TaskSuccessResult
 import java.time.Instant
+import org.gradle.tooling.events.task.TaskExecutionResult as GradleTaskExecutionResult
 
 abstract class TaskEventsService : BuildService<TaskEventsService.Params>, OperationCompletionListener, AutoCloseable {
     private val logger: Logger = Logging.getLogger(TaskEventsService::class.java)
@@ -30,6 +33,31 @@ abstract class TaskEventsService : BuildService<TaskEventsService.Params>, Opera
 
     override fun onFinish(finishEvent: FinishEvent) {
         if (finishEvent is TaskFinishEvent) {
+            val result = finishEvent.result
+
+            val outcome =
+                when (result) {
+                    // TaskSkippedResult.message can either be NO-SOURCE or SKIPPED
+                    is TaskSkippedResult -> result.skipMessage
+                    is FailureResult -> "EXECUTED"
+                    is TaskSuccessResult -> {
+                        when {
+                            result.isFromCache -> "FROM-CACHE"
+                            result.isUpToDate -> "UP-TO-DATE"
+                            else -> "EXECUTED"
+                        }
+                    }
+
+                    else -> ""
+                }
+
+            val (isIncremental, executionReasons) =
+                if (result is GradleTaskExecutionResult) {
+                    result.isIncremental to result.executionReasons
+                } else {
+                    null to null
+                }
+
             val taskFailureResult =
                 if (finishEvent.result is FailureResult) {
                     buildFailed = true
@@ -53,6 +81,7 @@ abstract class TaskEventsService : BuildService<TaskEventsService.Params>, Opera
                     startTime = Instant.ofEpochMilli(finishEvent.result.startTime),
                     endTime = Instant.ofEpochMilli(finishEvent.result.endTime),
                     failure = taskFailureResult,
+                    outcome = outcome,
                 )
 
             val taskSpan = parameters.getTraceService().get().createTaskSpan(taskExecutionResult)
@@ -63,7 +92,7 @@ abstract class TaskEventsService : BuildService<TaskEventsService.Params>, Opera
                 if (testExecutions.isNotEmpty()) {
                     parameters.getTraceService().get().createTestSpans(testExecutions, taskSpan)
                 }
-            } catch (e: MissingValueException) {
+            } catch (_: MissingValueException) {
                 // When the build isn't running tests, the TestExecutionTrackerService won't get instantiated
                 logger.debug("Received missing value exception")
             }
