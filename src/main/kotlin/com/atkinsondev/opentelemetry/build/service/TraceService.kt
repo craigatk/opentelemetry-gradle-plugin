@@ -8,8 +8,10 @@ import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.FAILURE_ST
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.GRADLE_VERSION_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.IS_CI_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.PROJECT_NAME_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_EXECUTION_REASONS_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILED_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_FAILURE_KEY
+import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_IS_INCREMENTAL_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_NAME_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_OUTCOME_KEY
 import com.atkinsondev.opentelemetry.build.OpenTelemetryBuildSpanData.TASK_PATH_KEY
@@ -136,6 +138,14 @@ abstract class TraceService : BuildService<TraceService.Params> {
                 .setAttribute(TASK_NAME_KEY, executionResult.name)
                 .setAttribute(TASK_PATH_KEY, executionResult.path)
                 .setAttribute(TASK_OUTCOME_KEY, executionResult.outcome)
+
+        if (executionResult.executionReasons.isNotEmpty()) {
+            spanBuilder.setAttribute(TASK_EXECUTION_REASONS_KEY, executionResult.executionReasons.joinToString())
+        }
+
+        if (executionResult.isIncremental != null) {
+            spanBuilder.setAttribute(TASK_IS_INCREMENTAL_KEY, executionResult.isIncremental)
+        }
 
         if (executionResult.failed) {
             spanBuilder.setAttribute(ERROR_KEY, true)

@@ -82,6 +82,8 @@ abstract class TaskEventsService : BuildService<TaskEventsService.Params>, Opera
                     endTime = Instant.ofEpochMilli(finishEvent.result.endTime),
                     failure = taskFailureResult,
                     outcome = outcome,
+                    executionReasons = executionReasons ?: emptyList(),
+                    isIncremental = isIncremental,
                 )
 
             val taskSpan = parameters.getTraceService().get().createTaskSpan(taskExecutionResult)

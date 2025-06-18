@@ -9,6 +9,8 @@ data class TaskExecutionResult(
     val endTime: Instant,
     val failure: TaskFailureResult?,
     val outcome: String,
+    val executionReasons: List<String>,
+    val isIncremental: Boolean?,
 ) {
     val key = this.path
 

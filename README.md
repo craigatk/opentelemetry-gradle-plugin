@@ -247,6 +247,13 @@ Due to the fundamental plugin changes required to work with the configuration ca
 | `task.type`                | Full package and class name of the task, e.g. `org.gradle.api.tasks.testing.Test` |
 | `task.did_work`            | Whether the task did work (boolean)                                               |
 
+Similarly, there are span attributes that are only supported when the configuration cache is in use.
+
+| Configuration cache only span attribute | Description                                                                                                                                                                                                                   |
+|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `task.execution_reasons`                | Comma separated list of reasons why the task was executed, if the task was not `SKIPPED`, `UP-TO-DATE`, or `FROM-CACHE`.                                                                                                      |
+| `task.is_incremental`                   | Whether the task was executed [incrementally](https://docs.gradle.org/current/userguide/custom_tasks.html#sec:implementing_an_incremental_task), if the task was executed (ie. not `SKIPPED`, `UP-TO-DATE`, or `FROM-CACHE`). |
+
 ##### Trace and span ID environment variables
 
 Passing trace and span ID environment variables to `Exec` tasks does not work when the configuration cache is enabled.

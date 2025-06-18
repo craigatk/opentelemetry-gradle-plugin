@@ -12,6 +12,8 @@ object OpenTelemetryBuildSpanData {
     const val TASK_TYPE_KEY = "task.type"
     const val TASK_DID_WORK_KEY = "task.did_work"
     const val TASK_OUTCOME_KEY = "task.outcome"
+    const val TASK_EXECUTION_REASONS_KEY = "task.execution_reasons"
+    const val TASK_IS_INCREMENTAL_KEY = "task.is_incremental"
     const val ERROR_KEY = "error"
     const val ERROR_MESSAGE_KEY = "error_message"
     const val TASK_FAILED_KEY = "task.failed"
