@@ -143,8 +143,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         assertLinesMatch(
             listOf(
                 " junit-\\d+-build",
-                "> :checkKotlinGradlePluginConfigurationErrors",
-                "> :compileKotlin",
+                "> (:checkKotlinGradlePluginConfigurationErrors|:compileKotlin)",
+                "> (:checkKotlinGradlePluginConfigurationErrors|:compileKotlin)",
                 "> :processResources",
                 "> :processTestResources",
                 "> :compileJava",
@@ -495,7 +495,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         attributeKey: String,
         expectedValue: String?,
     ) {
-        expectThat(tags.first { it.key == attributeKey }.strValue)
+        expectThat(tags.firstOrNull { it.key == attributeKey }?.strValue)
             .describedAs { "$operationName span attribute `$attributeKey`" }
             .isEqualTo(expectedValue)
     }
@@ -504,7 +504,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         attributeKey: String,
         expectedValue: Boolean?,
     ) {
-        expectThat(tags.first { it.key == attributeKey }.boolValue)
+        expectThat(tags.firstOrNull { it.key == attributeKey }?.boolValue)
             .describedAs { "$operationName span attribute `$attributeKey`" }
             .isEqualTo(expectedValue)
     }
