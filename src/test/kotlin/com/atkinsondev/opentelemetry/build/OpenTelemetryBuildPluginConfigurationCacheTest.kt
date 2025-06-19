@@ -245,7 +245,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         val taskSpans = rootSpans.first().children
 
-        val expectedTaskOutcomes = 
+        val expectedTaskOutcomes =
             mapOf(
                 ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
                 ":compileKotlin" to "EXECUTED",
@@ -289,7 +289,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         val secondTraceId = extractTraceId(secondBuildResult.output)
         val secondTaskSpans = fetchRootSpans(secondTraceId).first().children
 
-        val expectedSecondTaskOutcomes = 
+        val expectedSecondTaskOutcomes =
             mapOf(
                 ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
                 ":compileKotlin" to "FROM-CACHE",
