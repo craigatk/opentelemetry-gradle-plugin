@@ -143,8 +143,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         assertLinesMatch(
             listOf(
                 " junit-\\d+-build",
-                "> :checkKotlinGradlePluginConfigurationErrors",
-                "> :compileKotlin",
+                "> (:checkKotlinGradlePluginConfigurationErrors|:compileKotlin)",
+                "> (:checkKotlinGradlePluginConfigurationErrors|:compileKotlin)",
                 "> :processResources",
                 "> :processTestResources",
                 "> :compileJava",
@@ -178,6 +178,10 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 get { key }.isEqualTo("task.path")
                 get { strValue }.isEqualTo(":test")
             }
+            .any {
+                get { key }.isEqualTo("task.outcome")
+                get { strValue }.isEqualTo("EXECUTED")
+            }
 
         val testCaseSpan = testTaskSpan.children.first()
         expectThat(testCaseSpan.operationName).isEqualTo("FooTest foo should return bar but will fail()")
@@ -195,6 +199,134 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 get { key }.isEqualTo("test.failure.stacktrace")
                 get { strValue }.isNotNull().contains("FooTest.foo should return bar but will fail")
             }
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
+    fun `should publish spans when using config-cache compatible listener with task outcomes`(
+        gradleVersion: String,
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
+                supportConfigCache = true
+                
+                traceViewUrl = "http://localhost:16686/trace/{traceId}"
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        val buildRunner =
+            GradleRunner.create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace", "--build-cache")
+                .withGradleVersion(gradleVersion)
+                .withPluginClasspath()
+
+        val initialBuildResult = buildRunner.build()
+
+        expectThat(initialBuildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        // Parse trace ID from build output
+        val traceId = extractTraceId(initialBuildResult.output)
+
+        expectThat(initialBuildResult.output).contains("OpenTelemetry build trace http://localhost:16686/trace/$traceId")
+
+        val rootSpans = fetchRootSpans(traceId)
+        expectThat(rootSpans.first().operationName).matches("junit-\\d+-build".toRegex())
+
+        val taskSpans = rootSpans.first().children
+
+        val expectedTaskOutcomes =
+            mapOf(
+                ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
+                ":compileKotlin" to "EXECUTED",
+                ":processResources" to "NO-SOURCE",
+                ":processTestResources" to "NO-SOURCE",
+                ":compileJava" to "NO-SOURCE",
+                ":classes" to "UP-TO-DATE",
+                ":jar" to "EXECUTED",
+                ":compileTestKotlin" to "EXECUTED",
+                ":compileTestJava" to "NO-SOURCE",
+                ":testClasses" to "UP-TO-DATE",
+                ":test" to "EXECUTED",
+            )
+
+        val taskSpanNames = taskSpans.map { it.operationName }.sorted()
+
+        // Task execution order of :jar and :classes can be switched, so can :processResources and :processTestResources.
+        // Sorting the task list consistently verifies that all expected tasks were in the task graph, but not necessarily executed in the same order.
+        assertLinesMatch(
+            expectedTaskOutcomes.keys.sorted(),
+            taskSpanNames,
+        )
+
+        taskSpans.forEach { taskSpan ->
+            taskSpan.assertStrAttributeEquals("task.outcome", expectedTaskOutcomes[taskSpan.operationName])
+        }
+
+        taskSpans.first { it.operationName == ":compileKotlin" }
+            .assertBoolAttributeEquals("task.is_incremental", false)
+
+        taskSpans.first { it.operationName == ":compileTestJava" }
+            .assertBoolAttributeEquals("task.is_incremental", null)
+
+        // Delete the project directory so that the build cache is used, then run the task again
+        File(projectRootDirPath.toFile(), "build").deleteRecursively()
+        val secondBuildResult = buildRunner.build()
+
+        expectThat(secondBuildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.FROM_CACHE)
+
+        // Parse trace ID from build output
+        val secondTraceId = extractTraceId(secondBuildResult.output)
+        val secondTaskSpans = fetchRootSpans(secondTraceId).first().children
+
+        val expectedSecondTaskOutcomes =
+            mapOf(
+                ":checkKotlinGradlePluginConfigurationErrors" to "SKIPPED",
+                ":compileKotlin" to "FROM-CACHE",
+                ":processResources" to "NO-SOURCE",
+                ":processTestResources" to "NO-SOURCE",
+                ":compileJava" to "NO-SOURCE",
+                ":classes" to "UP-TO-DATE",
+                ":jar" to "EXECUTED",
+                ":compileTestKotlin" to "FROM-CACHE",
+                ":compileTestJava" to "NO-SOURCE",
+                ":testClasses" to "UP-TO-DATE",
+                ":test" to "FROM-CACHE",
+            )
+
+        val secondTaskSpanNames = secondTaskSpans.map { it.operationName }.sorted()
+
+        // Task execution order of :jar and :classes can be switched, so can :processResources and :processTestResources.
+        // Sorting the task list consistently verifies that all expected tasks were in the task graph, but not necessarily executed in the same order.
+        assertLinesMatch(
+            expectedSecondTaskOutcomes.keys.sorted(),
+            secondTaskSpanNames,
+        )
+
+        secondTaskSpans.forEach { taskSpan ->
+            taskSpan.assertStrAttributeEquals("task.outcome", expectedSecondTaskOutcomes[taskSpan.operationName])
+        }
+
+        expectThat(
+            secondTaskSpans
+                .first { it.operationName == ":jar" }
+                .tags
+                .first { it.key == "task.execution_reasons" }
+                .strValue
+                ?.replace(Regex("file.*\\.jar"), "file junit.jar"),
+        )
+            .describedAs { ":jar span attribute `task.execution_reasons`" }
+            .isEqualTo("Output property 'archiveFile' file junit.jar has been removed.")
     }
 
     @Test
@@ -357,5 +489,23 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             .hasSize(4)
             .map { it.operationName }
             .contains("BarTest bar should not return baz()", "BarTest bar should return foo()", "FooTest foo should not return baz()", "FooTest foo should return bar()")
+    }
+
+    private fun ResponseSpan.assertStrAttributeEquals(
+        attributeKey: String,
+        expectedValue: String?,
+    ) {
+        expectThat(tags.firstOrNull { it.key == attributeKey }?.strValue)
+            .describedAs { "$operationName span attribute `$attributeKey`" }
+            .isEqualTo(expectedValue)
+    }
+
+    private fun ResponseSpan.assertBoolAttributeEquals(
+        attributeKey: String,
+        expectedValue: Boolean?,
+    ) {
+        expectThat(tags.firstOrNull { it.key == attributeKey }?.boolValue)
+            .describedAs { "$operationName span attribute `$attributeKey`" }
+            .isEqualTo(expectedValue)
     }
 }
