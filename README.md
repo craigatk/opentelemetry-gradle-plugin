@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "4.0.0"
+    id 'com.atkinsondev.opentelemetry-build' version "4.3.0"
 }
 ```
 
@@ -281,7 +281,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "4.0.0"
+  id 'com.atkinsondev.opentelemetry-build' version "4.3.0"
 }
 
 openTelemetryBuild {
@@ -300,6 +300,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.3.0
+  * Adding support task outcomes in configuration cache enabled builds
 * 4.1.0
   * Upgrading to OpenTelemetry 1.49.0 and Gradle 8.14
 * 4.0.0
