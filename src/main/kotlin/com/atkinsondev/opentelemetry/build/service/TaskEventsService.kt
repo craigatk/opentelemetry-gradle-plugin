@@ -37,7 +37,7 @@ abstract class TaskEventsService : BuildService<TaskEventsService.Params>, Opera
 
             val outcome =
                 when (result) {
-                    // TaskSkippedResult.message can either be NO-SOURCE or SKIPPED
+                    // TaskSkippedResult.skipMessage can either be NO-SOURCE or SKIPPED
                     is TaskSkippedResult -> result.skipMessage
                     is FailureResult -> "EXECUTED"
                     is TaskSuccessResult -> {
