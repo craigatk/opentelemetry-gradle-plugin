@@ -9,73 +9,51 @@ import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.context.Context
 import java.util.concurrent.TimeUnit
 
-class FakeSpanBuilder(private val span: Span) : SpanBuilder {
-    override fun setParent(context: Context): SpanBuilder {
-        return this
-    }
+class FakeSpanBuilder(
+    private val span: Span,
+) : SpanBuilder {
+    override fun setParent(context: Context): SpanBuilder = this
 
-    override fun setNoParent(): SpanBuilder {
-        return this
-    }
+    override fun setNoParent(): SpanBuilder = this
 
-    override fun addLink(spanContext: SpanContext): SpanBuilder {
-        return this
-    }
+    override fun addLink(spanContext: SpanContext): SpanBuilder = this
 
     override fun addLink(
         spanContext: SpanContext,
         attributes: Attributes,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
     override fun setAttribute(
         key: String,
         value: String,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
     override fun setAttribute(
         key: String,
         value: Long,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
     override fun setAttribute(
         key: String,
         value: Double,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
     override fun setAttribute(
         key: String,
         value: Boolean,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
     override fun <T : Any?> setAttribute(
         key: AttributeKey<T>,
         value: T,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
-    override fun setSpanKind(spanKind: SpanKind): SpanBuilder {
-        return this
-    }
+    override fun setSpanKind(spanKind: SpanKind): SpanBuilder = this
 
     override fun setStartTimestamp(
         startTimestamp: Long,
         unit: TimeUnit,
-    ): SpanBuilder {
-        return this
-    }
+    ): SpanBuilder = this
 
-    override fun startSpan(): Span {
-        return span
-    }
+    override fun startSpan(): Span = span
 }

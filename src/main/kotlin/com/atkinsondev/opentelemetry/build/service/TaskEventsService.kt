@@ -18,7 +18,10 @@ import org.gradle.tooling.events.task.TaskSuccessResult
 import java.time.Instant
 import org.gradle.tooling.events.task.TaskExecutionResult as GradleTaskExecutionResult
 
-abstract class TaskEventsService : BuildService<TaskEventsService.Params>, OperationCompletionListener, AutoCloseable {
+abstract class TaskEventsService :
+    BuildService<TaskEventsService.Params>,
+    OperationCompletionListener,
+    AutoCloseable {
     private val logger: Logger = Logging.getLogger(TaskEventsService::class.java)
 
     interface Params : BuildServiceParameters {

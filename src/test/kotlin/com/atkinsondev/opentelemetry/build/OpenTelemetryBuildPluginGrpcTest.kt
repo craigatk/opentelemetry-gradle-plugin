@@ -40,7 +40,8 @@ class OpenTelemetryBuildPluginGrpcTest {
         stubFor(post("/opentelemetry.proto.collector.trace.v1.TraceService/Export").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()

@@ -44,7 +44,8 @@ class OpenTelemetryBuildPluginKotlinScriptTest {
         WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()

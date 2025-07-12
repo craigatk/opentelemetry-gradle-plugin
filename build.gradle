@@ -10,7 +10,7 @@ plugins {
     id "maven-publish"
     id "org.jetbrains.kotlin.jvm" version "2.0.21" // https://docs.gradle.org/current/userguide/compatibility.html#kotlin
     id "org.jetbrains.kotlin.plugin.serialization" version "2.0.21"
-    id "org.jlleitschuh.gradle.ktlint" version "12.3.0"
+    id "org.jlleitschuh.gradle.ktlint" version "13.0.0"
     id "dev.projektor.publish" version "10.0.0"
     id "com.gradle.plugin-publish" version "1.3.1"
     id "com.atkinsondev.opentelemetry-build" version "4.3.0"
@@ -63,10 +63,6 @@ test {
     useJUnitPlatform()
 
     maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
-}
-
-ktlint {
-    disabledRules = ["no-wildcard-imports"]
 }
 
 projektor {

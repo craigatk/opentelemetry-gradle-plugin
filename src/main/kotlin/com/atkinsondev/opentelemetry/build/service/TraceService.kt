@@ -78,7 +78,8 @@ abstract class TraceService : BuildService<TraceService.Params> {
     }
 
     private val baggage: Baggage by lazy {
-        Baggage.builder()
+        Baggage
+            .builder()
             .put(PROJECT_NAME_KEY, parameters.getProjectName().get())
             .put(GRADLE_VERSION_KEY, parameters.getGradleVersion().get())
             .put(IS_CI_KEY, parameters.getIsCI().get().toString())
@@ -94,7 +95,8 @@ abstract class TraceService : BuildService<TraceService.Params> {
         val rootSpanName = "${parameters.getProjectName().get()}-build"
 
         val rootSpanBuilder =
-            tracer.spanBuilder(rootSpanName)
+            tracer
+                .spanBuilder(rootSpanName)
                 .setAttribute("build.task.names", parameters.getTaskNames().get().joinToString(" "))
                 .addBaggage(baggage)
                 .setStartTimestamp(buildStartTime.minusMillis(10))

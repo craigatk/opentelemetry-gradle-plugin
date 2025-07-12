@@ -41,7 +41,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -93,7 +94,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -136,7 +138,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -181,7 +184,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -225,7 +229,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -271,7 +276,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -314,7 +320,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withEnvironment(mapOf("CI" to "true"))
@@ -361,7 +368,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("compileKotlin", "test", "--info")
                 .withPluginClasspath()
@@ -404,7 +412,8 @@ class OpenTelemetryBuildPluginTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("compileKotlin", "test", "--info")
                 .withPluginClasspath()

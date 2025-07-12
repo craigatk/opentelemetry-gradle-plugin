@@ -11,5 +11,9 @@ abstract class ConfigCacheService : BuildService<ConfigCacheService.Params> {
         fun getBuildFeatures(): BuildFeatures
     }
 
-    fun configCacheRequested(): Boolean = parameters.getBuildFeatures().configurationCache.requested.getOrElse(false)
+    fun configCacheRequested(): Boolean =
+        parameters
+            .getBuildFeatures()
+            .configurationCache.requested
+            .getOrElse(false)
 }

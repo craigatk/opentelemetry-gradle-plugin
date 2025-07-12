@@ -44,7 +44,8 @@ class OpenTelemetryBuildPluginCrossVersionTest {
         stubFor(post("/otel").willReturn(ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withGradleVersion(gradleVersion)

@@ -66,7 +66,8 @@ class OpenTelemetryTestListener(
             logger.info("Adding test failure event for test {}", fullDisplayName(test))
 
             val attributesBuilder =
-                Attributes.builder()
+                Attributes
+                    .builder()
                     .put(stringKey(TEST_NAME_KEY), fullDisplayName(test))
                     .put(stringKey(TASK_NAME_KEY), testTaskName)
 

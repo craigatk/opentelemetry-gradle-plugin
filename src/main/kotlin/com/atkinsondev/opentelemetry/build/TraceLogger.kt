@@ -3,7 +3,11 @@ package com.atkinsondev.opentelemetry.build
 import org.gradle.api.logging.Logger
 import org.gradle.api.logging.Logging
 
-class TraceLogger(private val traceViewUrl: String?, private val traceViewType: TraceViewType?, private val logger: Logger = Logging.getLogger(TraceLogger::class.java)) {
+class TraceLogger(
+    private val traceViewUrl: String?,
+    private val traceViewType: TraceViewType?,
+    private val logger: Logger = Logging.getLogger(TraceLogger::class.java),
+) {
     fun logTrace(traceId: String) {
         logger.warn("\nOpenTelemetry build trace ID $traceId")
 

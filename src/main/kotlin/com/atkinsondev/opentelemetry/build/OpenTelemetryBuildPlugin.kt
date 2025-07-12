@@ -141,7 +141,8 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                             // Put the following attributes on all spans
                             val baggage =
-                                Baggage.builder()
+                                Baggage
+                                    .builder()
                                     .put(PROJECT_NAME_KEY, project.name)
                                     .put(GRADLE_VERSION_KEY, project.gradle.gradleVersion)
                                     .put(IS_CI_KEY, isCI("CI").toString())
@@ -150,7 +151,8 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                             val rootSpanName = "${project.name}-build"
 
                             val rootSpanBuilder =
-                                tracer.spanBuilder(rootSpanName)
+                                tracer
+                                    .spanBuilder(rootSpanName)
                                     .setAttribute("build.task.names", taskNames.joinToString(" "))
                                     .addBaggage(baggage)
 
