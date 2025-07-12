@@ -133,4 +133,58 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
             orderedSpansNamesWithDepth,
         )
     }
+
+    @Test
+    fun `when test spans disabled should not include them`(
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
+                testSpans = false
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        val buildResult =
+            GradleRunner
+                .create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        // Parse trace ID from build output
+        val traceId = extractTraceId(buildResult.output)
+
+        val orderedSpansNamesWithDepth = fetchSpanNamesWithDepth(traceId)
+
+        // Use assertLinesMatch, as it has nice support for regexes
+        assertLinesMatch(
+            listOf(
+                " junit-\\d+-build",
+                "> :checkKotlinGradlePluginConfigurationErrors",
+                "> :compileKotlin",
+                "> :processResources",
+                "> :processTestResources",
+                "> :compileJava",
+                "> (:jar|:classes)",
+                "> (:jar|:classes)",
+                "> :compileTestKotlin",
+                "> :compileTestJava",
+                "> :testClasses",
+                "> :test",
+            ),
+            orderedSpansNamesWithDepth,
+        )
+    }
 }

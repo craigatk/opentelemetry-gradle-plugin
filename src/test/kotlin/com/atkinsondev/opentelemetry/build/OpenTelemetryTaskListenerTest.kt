@@ -33,6 +33,7 @@ class OpenTelemetryTaskListenerTest {
                 baggage = Baggage.builder().build(),
                 logger = NoopLogger(),
                 nestedTestSpans = false,
+                testSpansEnabled = true,
                 taskTraceEnvironmentConfig = TaskTraceEnvironmentConfig(false),
             )
 
@@ -70,6 +71,7 @@ class OpenTelemetryTaskListenerTest {
                 baggage = Baggage.builder().build(),
                 logger = NoopLogger(),
                 nestedTestSpans = false,
+                testSpansEnabled = true,
                 taskTraceEnvironmentConfig = TaskTraceEnvironmentConfig(false),
             )
 

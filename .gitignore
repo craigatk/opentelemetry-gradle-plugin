@@ -13,6 +13,7 @@
 /build
 out
 target
+.kotlin
 
 *.log
 

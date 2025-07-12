@@ -29,6 +29,7 @@ class OpenTelemetryTaskListener(
     private val baggage: Baggage,
     private val logger: Logger,
     private val nestedTestSpans: Boolean,
+    private val testSpansEnabled: Boolean,
     private val taskTraceEnvironmentConfig: TaskTraceEnvironmentConfig,
 ) : TaskExecutionListener {
     private val taskSpanMap = ConcurrentHashMap<String, Span>()
@@ -47,16 +48,18 @@ class OpenTelemetryTaskListener(
                 .setAttribute(TASK_TYPE_KEY, task.javaClass.name.replace("_Decorated", ""))
 
         if (task is Test) {
-            val testListener =
-                OpenTelemetryTestListener(
-                    tracer = tracer,
-                    testTaskSpan = span,
-                    baggage = baggage,
-                    testTaskName = task.name,
-                    logger = logger,
-                    nestedTestSpans = nestedTestSpans,
-                )
-            task.addTestListener(testListener)
+            if (testSpansEnabled) {
+                val testListener =
+                    OpenTelemetryTestListener(
+                        tracer = tracer,
+                        testTaskSpan = span,
+                        baggage = baggage,
+                        testTaskName = task.name,
+                        logger = logger,
+                        nestedTestSpans = nestedTestSpans,
+                    )
+                task.addTestListener(testListener)
+            }
         }
 
         if (taskTraceEnvironmentConfig.enabled && task is Exec) {
