@@ -42,7 +42,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withGradleVersion(gradleVersion)
@@ -125,7 +126,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         createTestDirectoryAndFailingClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -169,16 +171,13 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             .any {
                 get { key }.isEqualTo("error")
                 get { boolValue }.isEqualTo(true)
-            }
-            .any {
+            }.any {
                 get { key }.isEqualTo("error_message")
                 get { strValue }.isNotNull().contains("Execution failed for task ':test'")
-            }
-            .any {
+            }.any {
                 get { key }.isEqualTo("task.path")
                 get { strValue }.isEqualTo(":test")
-            }
-            .any {
+            }.any {
                 get { key }.isEqualTo("task.outcome")
                 get { strValue }.isEqualTo("EXECUTED")
             }
@@ -190,12 +189,10 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             .any {
                 get { key }.isEqualTo("error")
                 get { boolValue }.isEqualTo(true)
-            }
-            .any {
+            }.any {
                 get { key }.isEqualTo("error_message")
                 get { strValue }.isNotNull().contains("Assertion failed")
-            }
-            .any {
+            }.any {
                 get { key }.isEqualTo("test.failure.stacktrace")
                 get { strValue }.isNotNull().contains("FooTest.foo should return bar but will fail")
             }
@@ -225,7 +222,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildRunner =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace", "--build-cache")
                 .withGradleVersion(gradleVersion)
@@ -273,10 +271,12 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
             taskSpan.assertStrAttributeEquals("task.outcome", expectedTaskOutcomes[taskSpan.operationName])
         }
 
-        taskSpans.first { it.operationName == ":compileKotlin" }
+        taskSpans
+            .first { it.operationName == ":compileKotlin" }
             .assertBoolAttributeEquals("task.is_incremental", false)
 
-        taskSpans.first { it.operationName == ":compileTestJava" }
+        taskSpans
+            .first { it.operationName == ":compileTestJava" }
             .assertBoolAttributeEquals("task.is_incremental", null)
 
         // Delete the project directory so that the build cache is used, then run the task again
@@ -324,8 +324,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 .first { it.key == "task.execution_reasons" }
                 .strValue
                 ?.replace(Regex("file.*\\.jar"), "file junit.jar"),
-        )
-            .describedAs { ":jar span attribute `task.execution_reasons`" }
+        ).describedAs { ":jar span attribute `task.execution_reasons`" }
             .isEqualTo("Output property 'archiveFile' file junit.jar has been removed.")
     }
 
@@ -348,7 +347,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--configuration-cache", "--info", "--stacktrace")
                 .withEnvironment(mapOf("JAVA_OPTS" to "--add-opens=java.base/java.util=ALL-UNNAMED"))
@@ -415,7 +415,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("help", "--configuration-cache", "--info", "--stacktrace")
                 .withEnvironment(mapOf("JAVA_OPTS" to "--add-opens=java.base/java.util=ALL-UNNAMED"))
@@ -457,7 +458,8 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--configuration-cache", "--info", "--stacktrace")
                 .withEnvironment(mapOf("JAVA_OPTS" to "--add-opens=java.base/java.util=ALL-UNNAMED"))

@@ -24,7 +24,8 @@ class OpenTelemetryInit {
         val customAttributes = customAttributesBuilder.build()
 
         val customResourceAttributes =
-            Resource.builder()
+            Resource
+                .builder()
                 .put(SERVICE_NAME, serviceName)
                 .put(TELEMETRY_SDK_NAME, SDK_NAME)
                 .put(TELEMETRY_SDK_VERSION, SDK_VERSION)
@@ -32,14 +33,16 @@ class OpenTelemetryInit {
                 .build()
 
         val resource: Resource =
-            Resource.getDefault()
+            Resource
+                .getDefault()
                 .merge(customResourceAttributes)
 
         val spanExporter =
             when (exporterMode) {
                 OpenTelemetryExporterMode.GRPC -> {
                     val spanExporterBuilder =
-                        OtlpGrpcSpanExporter.builder()
+                        OtlpGrpcSpanExporter
+                            .builder()
                             .setTimeout(2, TimeUnit.SECONDS)
                             .setEndpoint(endpoint)
                             .addHeader("User-Agent", USER_AGENT_VALUE)
@@ -51,7 +54,8 @@ class OpenTelemetryInit {
 
                 OpenTelemetryExporterMode.ZIPKIN -> {
                     val spanExporterBuilder =
-                        ZipkinSpanExporter.builder()
+                        ZipkinSpanExporter
+                            .builder()
                             .setReadTimeout(2, TimeUnit.SECONDS)
                             .setEndpoint(endpoint)
 
@@ -60,7 +64,8 @@ class OpenTelemetryInit {
 
                 else -> {
                     val spanExporterBuilder =
-                        OtlpHttpSpanExporter.builder()
+                        OtlpHttpSpanExporter
+                            .builder()
                             .setTimeout(2, TimeUnit.SECONDS)
                             .setEndpoint(endpoint)
                             .addHeader("User-Agent", USER_AGENT_VALUE)
@@ -72,18 +77,19 @@ class OpenTelemetryInit {
             }
 
         val openTelemetrySdk =
-            OpenTelemetrySdk.builder()
+            OpenTelemetrySdk
+                .builder()
                 .setTracerProvider(
-                    SdkTracerProvider.builder()
+                    SdkTracerProvider
+                        .builder()
                         .setResource(resource)
                         .addSpanProcessor(
-                            BatchSpanProcessor.builder(spanExporter)
+                            BatchSpanProcessor
+                                .builder(spanExporter)
                                 .setScheduleDelay(100, TimeUnit.MILLISECONDS)
                                 .build(),
-                        )
-                        .build(),
-                )
-                .build()
+                        ).build(),
+                ).build()
 
         return openTelemetrySdk
     }

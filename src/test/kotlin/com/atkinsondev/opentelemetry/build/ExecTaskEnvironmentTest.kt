@@ -48,7 +48,8 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         File(projectRootDirPath.toFile(), "script.sh").writeText(scriptFileContents)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("printEnv", "--info", "--stacktrace")
                 .withGradleVersion(gradleVersion)
@@ -61,7 +62,12 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
-        val execTaskSpanId = trace.data.first().spans.find { it.operationName == ":printEnv" }?.spanID
+        val execTaskSpanId =
+            trace.data
+                .first()
+                .spans
+                .find { it.operationName == ":printEnv" }
+                ?.spanID
 
         val outputLine = buildResult.output.lines().find { it.contains("traceid") }
         val expectedTraceParent = "00-$traceId-$execTaskSpanId-01"
@@ -105,7 +111,8 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         File(projectRootDirPath.toFile(), "script.sh").writeText(scriptFileContents)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("printEnv", "--info", "--stacktrace")
                 .withGradleVersion(gradleVersion)
@@ -118,7 +125,12 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
-        val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
+        val rootSpanId =
+            trace.data
+                .first()
+                .spans
+                .find { it.isRoot() }
+                ?.spanID
         expectThat(rootSpanId).isNotNull()
 
         val outputLine = buildResult.output.lines().find { it.contains("traceid") }
@@ -164,7 +176,8 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         File(projectRootDirPath.toFile(), "script.sh").writeText(scriptFileContents)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("printEnv", "--configuration-cache", "--info", "--stacktrace")
                 .withEnvironment(mapOf("JAVA_OPTS" to "--add-opens=java.base/java.util=ALL-UNNAMED"))
@@ -178,7 +191,12 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
         val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
         expectThat(trace.data).hasSize(1)
 
-        val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
+        val rootSpanId =
+            trace.data
+                .first()
+                .spans
+                .find { it.isRoot() }
+                ?.spanID
         expectThat(rootSpanId).isNotNull()
 
         val outputLine = buildResult.output.lines().find { it.contains("traceid") }

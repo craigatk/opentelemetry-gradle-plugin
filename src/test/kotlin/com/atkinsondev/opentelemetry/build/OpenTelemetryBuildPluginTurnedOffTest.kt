@@ -31,7 +31,8 @@ class OpenTelemetryBuildPluginTurnedOffTest {
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -72,7 +73,8 @@ class OpenTelemetryBuildPluginTurnedOffTest {
         WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()
@@ -111,7 +113,8 @@ class OpenTelemetryBuildPluginTurnedOffTest {
         WireMock.stubFor(WireMock.post("/otel").willReturn(WireMock.ok()))
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withPluginClasspath()

@@ -37,7 +37,8 @@ class OpenTelemetryBuildPluginRemoteParentTraceConfigCacheTest : JaegerIntegrati
         createTestDirectoryAndClassFile(projectRootDirPath)
 
         val buildResult =
-            GradleRunner.create()
+            GradleRunner
+                .create()
                 .withProjectDir(projectRootDirPath.toFile())
                 .withArguments("test", "--info", "--stacktrace")
                 .withEnvironment(mapOf("SPAN_ID" to "f1a2153e247b0d94", "TRACE_ID" to "a263fdf001993a32980b9ec5740b7d6d"))

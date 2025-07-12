@@ -137,16 +137,15 @@ abstract class JaegerIntegrationTestCase {
                     healthCheckPort,
                     oltpGrpcPort,
                     queryPort,
-                )
-                .withEnv(
+                ).withEnv(
                     mapOf(
                         "ADMIN_HTTP_HOST_PORT" to ":$healthCheckPort",
                         "QUERY_HTTP_SERVER_HOST_PORT" to ":$queryPort",
                         "COLLECTOR_OTLP_GRPC_HOST_PORT" to ":$oltpGrpcPort",
                     ),
-                )
-                .waitingFor(
-                    Wait.forHttp("/")
+                ).waitingFor(
+                    Wait
+                        .forHttp("/")
                         .forStatusCode(200)
                         .forPort(healthCheckPort),
                 )
@@ -183,7 +182,8 @@ abstract class JaegerIntegrationTestCase {
         // Fetch trace data from Jaeger
         val httpClient = OkHttpClient.Builder().build()
         val request =
-            Request.Builder()
+            Request
+                .Builder()
                 .url("http://localhost:${jaegerContainer.getMappedPort(queryPort)}/api/traces/$traceId")
                 .get()
                 .build()
@@ -201,7 +201,12 @@ abstract class JaegerIntegrationTestCase {
             expectThat(trace.data.first().spans).isNotEmpty()
 
             if (verifyRootSpanId) {
-                val rootSpanId = trace.data.first().spans.find { it.isRoot() }?.spanID
+                val rootSpanId =
+                    trace.data
+                        .first()
+                        .spans
+                        .find { it.isRoot() }
+                        ?.spanID
                 expectThat(rootSpanId).isNotNull()
             }
         }
@@ -258,8 +263,7 @@ abstract class JaegerIntegrationTestCase {
                             span.references
                                 .also {
                                     assert(it.size == 1)
-                                }
-                                .first()
+                                }.first()
                                 .spanID
 
                         if (depths.containsKey(parentSpanId)) {
