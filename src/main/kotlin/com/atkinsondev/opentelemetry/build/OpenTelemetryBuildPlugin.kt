@@ -186,6 +186,7 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                     baggage = baggage,
                                     logger = project.logger,
                                     nestedTestSpans = extension.nestedTestSpans.get(),
+                                    testSpansEnabled = extension.testSpans.get(),
                                     taskTraceEnvironmentConfig = taskTraceEnvironmentConfig,
                                 )
                             project.gradle.addListener(taskListener)

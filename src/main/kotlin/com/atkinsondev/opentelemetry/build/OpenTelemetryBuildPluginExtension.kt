@@ -15,6 +15,7 @@ abstract class OpenTelemetryBuildPluginExtension {
     abstract val parentTraceIdEnvVarName: Property<String>
 
     abstract val nestedTestSpans: Property<Boolean>
+    abstract val testSpans: Property<Boolean>
 
     abstract val traceViewUrl: Property<String>
     abstract val traceViewType: Property<TraceViewType>
@@ -34,6 +35,7 @@ abstract class OpenTelemetryBuildPluginExtension {
         parentTraceIdEnvVarName.convention("TRACE_ID")
 
         nestedTestSpans.convention(true)
+        testSpans.convention(true)
 
         supportConfigCache.convention(false)
 
