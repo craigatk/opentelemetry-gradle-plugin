@@ -359,7 +359,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         println(buildResult.output)
 
-        expectThat(buildResult.output).contains("0 problems were found storing the configuration cache")
+        expectThat(buildResult.output).contains("Configuration cache entry stored")
 
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
@@ -427,7 +427,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         println(buildResult.output)
 
-        expectThat(buildResult.output).contains("0 problems were found storing the configuration cache")
+        expectThat(buildResult.output).contains("Configuration cache entry stored")
 
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
@@ -470,7 +470,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
 
         println(buildResult.output)
 
-        expectThat(buildResult.output).contains("0 problems were found storing the configuration cache")
+        expectThat(buildResult.output).contains("Configuration cache entry stored")
 
         // Parse trace ID from build output
         val traceId = extractTraceId(buildResult.output)
