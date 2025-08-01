@@ -153,7 +153,7 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
                 "> (:jar|:classes)",
                 "> (:jar|:classes)",
                 "> :compileTestKotlin",
-                "> :compileTestJava",
+                "> (:testClasses|:compileTestJava)",
                 "> (:testClasses|:test)",
                 "> (:testClasses|:test)",
                 ">> FooTest foo should return bar but will fail()",
