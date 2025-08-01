@@ -95,7 +95,7 @@ fun baseBuildFileContents(): String =
     
     plugins {
         id "com.atkinsondev.opentelemetry-build"
-        id "org.jetbrains.kotlin.jvm" version "2.0.21"
+        id "org.jetbrains.kotlin.jvm" version "2.2.0"
     }
     
     repositories {
@@ -105,6 +105,7 @@ fun baseBuildFileContents(): String =
     dependencies {
         testImplementation(platform("org.junit:junit-bom:5.9.0"))
         testImplementation("org.junit.jupiter:junit-jupiter")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
     
     test {
@@ -121,7 +122,7 @@ fun baseKotlinBuildFileContents(): String =
     }
 
     plugins {
-        id("org.jetbrains.kotlin.jvm") version "2.0.21"
+        id("org.jetbrains.kotlin.jvm") version "2.2.0"
         id("com.atkinsondev.opentelemetry-build")
     }
     
@@ -132,6 +133,7 @@ fun baseKotlinBuildFileContents(): String =
     dependencies {
         testImplementation(platform("org.junit:junit-bom:5.9.0"))
         testImplementation("org.junit.jupiter:junit-jupiter")
+        testRuntimeOnly("org.junit.platform:junit-platform-launcher")
     }
     
     tasks.named<Test>("test") {
