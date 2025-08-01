@@ -80,7 +80,7 @@ class OpenTelemetryTaskListenerTest {
         every { testTask.name } returns "test"
 
         val taskState = TaskStateInternal()
-        taskState.outcome = TaskExecutionOutcome.EXECUTED
+        taskState.setOutcome(TaskExecutionOutcome.EXECUTED)
 
         taskListener.beforeExecute(testTask)
         taskListener.afterExecute(testTask, taskState)
