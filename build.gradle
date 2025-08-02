@@ -56,7 +56,7 @@ dependencies {
     testImplementation "io.mockk:mockk:1.14.5"
     testImplementation "org.testcontainers:testcontainers:1.21.3"
     testImplementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
-    testImplementation "com.squareup.okhttp3:okhttp:4.12.0"
+    testImplementation "com.squareup.okhttp3:okhttp:5.1.0"
 }
 
 test {
