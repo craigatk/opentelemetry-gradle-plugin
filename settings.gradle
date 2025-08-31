@@ -6,7 +6,7 @@ pluginManagement {
 }
 
 plugins {
-    id "com.atkinsondev.object-store-cache" version "2.1.0"
+    id "com.atkinsondev.object-store-cache" version "3.0.0"
 }
 
 boolean isCI = Boolean.valueOf(System.getenv("GITHUB_ACTIONS"))
