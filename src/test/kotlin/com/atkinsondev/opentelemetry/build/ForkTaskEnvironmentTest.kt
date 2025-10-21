@@ -16,14 +16,14 @@ import strikt.assertions.isNotNull
 import java.io.File
 import java.nio.file.Path
 
-class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
+class ForkTaskEnvironmentTest : JaegerIntegrationTestCase() {
     override val healthCheckPort = 14273
     override val oltpGrpcPort = 4403
     override val queryPort = 16671
 
     @ParameterizedTest
     @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
-    fun `should put environment variables with trace and span IDs without config cache param enabled`(
+    fun `should put environment variables with trace and span IDs in Exec task without config cache param enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
     ) {
@@ -85,7 +85,56 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
 
     @ParameterizedTest
     @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
-    fun `should put environment variables with trace and span IDs with config cache param enabled`(
+    fun `should put environment variables with trace and span IDs in Test task without config cache param enabled`(
+        gradleVersion: String,
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
+                taskTraceEnvironmentEnabled = true
+                
+                traceViewUrl = "http://localhost:16686/trace/{traceId}"
+            }
+            """.trimIndent()
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndTestFileWithEnvOutput(projectRootDirPath)
+
+        val buildResult =
+            GradleRunner
+                .create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withGradleVersion(gradleVersion)
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        val traceId = extractTraceId(buildResult.output)
+        val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)
+        expectThat(trace.data).hasSize(1)
+
+        val execTaskSpanId =
+            trace.data
+                .first()
+                .spans
+                .find { it.operationName == ":test" }
+                ?.spanID
+
+        val outputLine = buildResult.output.lines().find { it.contains("traceid") }
+        val expectedTraceParent = "00-$traceId-$execTaskSpanId-01"
+        expectThat(outputLine).isNotNull().contains("traceid: $traceId spanid: $execTaskSpanId traceparent: $expectedTraceParent")
+    }
+
+    @ParameterizedTest
+    @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
+    fun `should put environment variables with trace and span IDs in Exec task with config cache param enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
     ) {
@@ -150,7 +199,7 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
     @Disabled("Doesn't work yet with config cache enabled")
     @ParameterizedTest
     @MethodSource("com.atkinsondev.opentelemetry.build.util.GradleTestVersions#versions")
-    fun `should put environment variables with trace and span IDs with config cache enabled`(
+    fun `should put environment variables with trace and span IDs in Exec task with config cache enabled`(
         gradleVersion: String,
         @TempDir projectRootDirPath: Path,
     ) {
@@ -186,6 +235,8 @@ class ExecTaskEnvironmentTest : JaegerIntegrationTestCase() {
                 .build()
 
         expectThat(buildResult.task(":printEnv")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        println(buildResult.output)
 
         val traceId = extractTraceId(buildResult.output)
         val trace = fetchTrace(traceId = traceId, verifyRootSpanId = true)

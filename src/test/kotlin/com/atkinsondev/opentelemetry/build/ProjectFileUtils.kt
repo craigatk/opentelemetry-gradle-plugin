@@ -84,6 +84,31 @@ fun createTestDirectoryAndFailingClassFile(projectRootDirPath: Path) {
     File(testPath.toFile(), "FooTest.kt").writeText(testFileContents)
 }
 
+fun createTestDirectoryAndTestFileWithEnvOutput(projectRootDirPath: Path) {
+    val testPath = Paths.get(projectRootDirPath.absolutePathString(), "src/test/kotlin").createDirectories()
+
+    val printStmt = "traceid: \$traceId spanid: \$spanId traceparent: \$traceParent"
+
+    val testFileContents =
+        """
+        import org.junit.jupiter.api.Test
+        
+        class FooTest {
+            @Test
+            fun `foo should return bar but will fail`() {
+                val traceId = System.getenv("TRACE_ID")
+                val spanId = System.getenv("SPAN_ID")
+                val traceParent = System.getenv("TRACEPARENT")
+        
+                println("$printStmt")
+                assert(foo() != "baz")
+            }
+        }
+        """.trimIndent()
+
+    File(testPath.toFile(), "FooTest.kt").writeText(testFileContents)
+}
+
 fun baseBuildFileContents(): String =
     """
     buildscript {

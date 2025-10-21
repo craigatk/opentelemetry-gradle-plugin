@@ -18,9 +18,9 @@ import org.gradle.api.Task
 import org.gradle.api.execution.TaskExecutionListener
 import org.gradle.api.internal.tasks.TaskStateInternal
 import org.gradle.api.logging.Logger
-import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskState
 import org.gradle.api.tasks.testing.Test
+import org.gradle.process.ProcessForkOptions
 import java.util.concurrent.ConcurrentHashMap
 
 class OpenTelemetryTaskListener(
@@ -62,7 +62,7 @@ class OpenTelemetryTaskListener(
             }
         }
 
-        if (taskTraceEnvironmentConfig.enabled && task is Exec) {
+        if (taskTraceEnvironmentConfig.enabled && task is ProcessForkOptions) {
             val traceId = span.spanContext.traceId
             val spanId = span.spanContext.spanId
 
