@@ -13,7 +13,7 @@ plugins {
     id "org.jlleitschuh.gradle.ktlint" version "13.1.0"
     id "dev.projektor.publish" version "10.0.0"
     id "com.gradle.plugin-publish" version "2.0.0"
-    id "com.atkinsondev.opentelemetry-build" version "4.5.0"
+    id "com.atkinsondev.opentelemetry-build" version "4.6.0"
 }
 
 group = "com.atkinsondev"
