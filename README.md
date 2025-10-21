@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "4.5.0"
+    id 'com.atkinsondev.opentelemetry-build' version "4.6.0"
 }
 ```
 
@@ -219,7 +219,7 @@ openTelemetryBuild {
 | traceViewUrl                        | `String`                    | `null`                           | Pass in a URL to have the plugin print a link to the trace at the end of the build (in addition to printing the trace ID). Put `{traceId}` in the URL for the location where the trace ID should be substituted, e.g. `http://localhost:16686/trace/{traceId}`. If using `traceViewType`, only put the root URL of the server e.g. `http://localhost:16686` for a local Jaeger server. |
 | traceViewType                       | `TraceViewType`             | `null`                           | Convenience for trace view URLs for known OpenTelemetry backends such as Jaeger. When set, you don't have to put the full trace URL in the `traceViewUrl` param, only the root path of the OpenTelemetry backend's URL.                                                                                                                                                                |
 | supportConfigCache                  | `Boolean`                   | `false`                          | Enable experimental support for the Gradle configuration cache. When used with Gradle 8.5+, the plugin will auto-detect if the configuration cache is enabled and this parameter is not necessary                                                                                                                                                                                      |
-| taskTraceEnvironmentEnabled         | `Boolean`                   | `false`                          | Whether to pass the trace and span IDs as environment variables to all `Exec` tasks in the build                                                                                                                                                                                                                                                                                       |
+| taskTraceEnvironmentEnabled         | `Boolean`                   | `false`                          | Whether to pass the trace and span IDs as environment variables to all tasks in the build that implement `ProcessForkOptions` such as `Exec` and `Test` tasks                                                                                                                                                                                                                          |
 | taskTraceEnvironmentTraceIdName     | `String`                    | `TRACE_ID`                       | Name of trace ID environment variable passed to `Exec` tasks, when enabled                                                                                                                                                                                                                                                                                                             |
 | taskTraceEnvironmentSpanIdName      | `String`                    | `SPAN_ID`                        | Name of span ID environment variable passed to `Exec` tasks, when enabled                                                                                                                                                                                                                                                                                                              |
 | taskTraceEnvironmentTraceParentName | `String`                    | `TRACEPARENT`                    | Name of trace-parent environment variable passed to `Exec` tasks, when enabled                                                                                                                                                                                                                                                                                                         |
@@ -282,7 +282,7 @@ Configure the plugin in `build.gradle` to point at the gRPC endpoint running on 
 
 ```groovy
 plugins {
-  id 'com.atkinsondev.opentelemetry-build' version "4.5.0"
+  id 'com.atkinsondev.opentelemetry-build' version "4.6.0"
 }
 
 openTelemetryBuild {
@@ -301,6 +301,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.6.0
+  * Adding support for passing trace environment variables to any task that implements ProcessForkOptions, not just Exec tasks
 * 4.5.0
   * Upgrading to Gradle 9 and Kotlin 2.2.0
 * 4.4.0
