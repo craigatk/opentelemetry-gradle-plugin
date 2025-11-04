@@ -42,6 +42,8 @@ class OpenTelemetryBuildPluginSpansIntegrationTest : JaegerIntegrationTestCase()
                 .withPluginClasspath()
                 .build()
 
+        println(buildResult.output)
+
         expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
 
         // Parse trace ID from build output

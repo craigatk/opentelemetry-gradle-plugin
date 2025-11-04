@@ -77,7 +77,6 @@ openTelemetryBuild {
             "x-honeycomb-dataset": "otel-gradle"
     ]
     traceViewUrl = "https://ui.honeycomb.io/otel-gradle/environments/dev/datasets/gradle-builds/trace?trace_id={traceId}"
-    taskTraceEnvironmentEnabled = true
 }
 
 task printEnv(type: Exec) {
