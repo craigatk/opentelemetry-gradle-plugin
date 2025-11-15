@@ -301,6 +301,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.6.1
+  * Quiet noisy error logs when the OpenTelemetry export fails
 * 4.6.0
   * Adding support for passing trace environment variables to any task that implements ProcessForkOptions, not just Exec tasks
 * 4.5.0
