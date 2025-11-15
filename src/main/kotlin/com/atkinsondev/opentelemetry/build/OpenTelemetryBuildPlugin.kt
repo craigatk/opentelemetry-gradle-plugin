@@ -14,7 +14,9 @@ import org.gradle.api.tasks.Exec
 import org.gradle.api.tasks.TaskCollection
 import org.gradle.build.event.BuildEventsListenerRegistry
 import org.gradle.util.GradleVersion
+import java.io.IOException
 import java.time.Instant
+import java.util.logging.LogManager
 import javax.inject.Inject
 
 abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
@@ -29,6 +31,8 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
 
             if (enabled) {
                 project.logger.info("Configuring OpenTelemetry build plugin")
+
+                loadJavaLoggingConfigFile(project)
 
                 val endpoint = extension.endpoint.orNull
 
@@ -215,6 +219,19 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
             task.environment[config.traceIdName] = traceId
             task.environment[config.spanIdName] = spanId
             task.environment[config.traceParentName] = "00-$traceId-$spanId-01"
+        }
+    }
+
+    private fun loadJavaLoggingConfigFile(project: Project) {
+        // Suppress errors from exporting to OpenTelemetry backend
+        try {
+            val inputStream =
+                OpenTelemetryBuildPlugin::class.java
+                    .getClassLoader()
+                    .getResourceAsStream("logging.properties")
+            LogManager.getLogManager().readConfiguration(inputStream)
+        } catch (e: IOException) {
+            project.logger.warn("Could not load logging.properties file", e)
         }
     }
 
