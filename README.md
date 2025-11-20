@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "4.6.0"
+    id 'com.atkinsondev.opentelemetry-build' version "4.6.2"
 }
 ```
 
@@ -301,6 +301,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.6.2
+  * Handle dry-run flag when config cache is enabled
 * 4.6.1
   * Quiet noisy error logs when the OpenTelemetry export fails
 * 4.6.0
