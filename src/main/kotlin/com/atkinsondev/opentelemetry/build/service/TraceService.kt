@@ -224,21 +224,25 @@ abstract class TraceService : BuildService<TraceService.Params> {
     }
 
     fun close(buildFailed: Boolean) {
-        logger.debug("Closing trace service [{}]", this)
+        if (started) {
+            logger.debug("Closing trace service [{}]", this)
 
-        rootSpan.setAttribute("build.success", !buildFailed)
+            rootSpan.setAttribute("build.success", !buildFailed)
 
-        rootSpan.end()
+            rootSpan.end()
 
-        val traceLogger = TraceLogger(parameters.getTraceViewUrl().orNull, parameters.getTraceViewType().orNull)
+            val traceLogger = TraceLogger(parameters.getTraceViewUrl().orNull, parameters.getTraceViewType().orNull)
 
-        traceLogger.logTrace(rootSpan.spanContext.traceId)
+            traceLogger.logTrace(rootSpan.spanContext.traceId)
 
-        try {
-            openTelemetry.sdkTracerProvider.forceFlush()
-            openTelemetry.sdkTracerProvider.shutdown()
-        } catch (e: Exception) {
-            logger.warn("Error closing OpenTelemetry provider", e)
+            try {
+                openTelemetry.sdkTracerProvider.forceFlush()
+                openTelemetry.sdkTracerProvider.shutdown()
+            } catch (e: Exception) {
+                logger.warn("Error closing OpenTelemetry provider", e)
+            }
+        } else {
+            logger.info("Build not started, not sending traces")
         }
     }
 }

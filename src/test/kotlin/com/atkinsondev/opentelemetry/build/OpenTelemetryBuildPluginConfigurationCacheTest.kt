@@ -439,6 +439,38 @@ class OpenTelemetryBuildPluginConfigurationCacheTest : JaegerIntegrationTestCase
     }
 
     @Test
+    fun `should not fail when using config-cache compatible listener with config-cache enabled and running dry-run`(
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = 'http://localhost:${jaegerContainer.getMappedPort(oltpGrpcPort)}'
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        val buildResult =
+            GradleRunner
+                .create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("--configuration-cache", "--info", "--stacktrace", "--dry-run")
+                .withEnvironment(mapOf("JAVA_OPTS" to "--add-opens=java.base/java.util=ALL-UNNAMED"))
+                .withPluginClasspath()
+                .build()
+
+        println(buildResult.output)
+
+        expectThat(buildResult.output).contains("Configuration cache entry stored")
+    }
+
+    @Test
     fun `should publish spans when using config-cache compatible listener with config-cache enabled and not nested test spans`(
         @TempDir projectRootDirPath: Path,
     ) {
