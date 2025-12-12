@@ -385,3 +385,7 @@ Then to view the build traces in your local Jaeger instance:
   * Adding `system.is_ci` attribute to root build span
 * 1.0.0
   * Initial release
+
+# Additional resources
+- blog post: [Find and Fix Bottlenecks in Your Gradle Builds With OpenTelemetry and Honeycomb](https://www.honeycomb.io/blog/gradle-builds-opentelemery-honeycomb)
+
