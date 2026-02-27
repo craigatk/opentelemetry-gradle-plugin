@@ -8,7 +8,7 @@ buildscript {
 plugins {
     id "java-gradle-plugin"
     id "maven-publish"
-    id "org.jetbrains.kotlin.jvm" version "2.2.21" // https://docs.gradle.org/current/userguide/compatibility.html#kotlin
+    id "org.jetbrains.kotlin.jvm" version "2.3.10" // https://docs.gradle.org/current/userguide/compatibility.html#kotlin
     id "org.jetbrains.kotlin.plugin.serialization" version "2.2.21"
     id "org.jlleitschuh.gradle.ktlint" version "14.0.1"
     id "dev.projektor.publish" version "10.0.0"
