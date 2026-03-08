@@ -25,8 +25,8 @@ class FakeSpanBuilder(
 
     override fun setAttribute(
         key: String,
-        value: String,
-    ): SpanBuilder = this
+        value: String?,
+    ): SpanBuilder? = this
 
     override fun setAttribute(
         key: String,
@@ -44,9 +44,9 @@ class FakeSpanBuilder(
     ): SpanBuilder = this
 
     override fun <T : Any?> setAttribute(
-        key: AttributeKey<T>,
-        value: T,
-    ): SpanBuilder = this
+        key: AttributeKey<T?>,
+        value: T?,
+    ): SpanBuilder? = this
 
     override fun setSpanKind(spanKind: SpanKind): SpanBuilder = this
 
