@@ -252,6 +252,99 @@ class OpenTelemetryBuildPluginTest {
     }
 
     @Test
+    fun `should send data to OpenTelemetry with resource attributes from OTEL_RESOURCE_ATTRIBUTES env var`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult =
+            GradleRunner
+                .create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withEnvironment(mapOf("OTEL_RESOURCE_ATTRIBUTES" to "gitlab.pipeline.id=1234,gitlab.job.id=5678"))
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+            val otelRequestBodies = otelRequests.map { it.bodyAsString }
+
+            expectThat(otelRequests).isNotEmpty()
+            expectThat(otelRequestBodies.find { it.contains("gitlab.pipeline.id") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("1234") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("gitlab.job.id") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("5678") }).isNotNull()
+        }
+    }
+
+    @Test
+    fun `when custom tag and OTEL_RESOURCE_ATTRIBUTES env var have the same key, custom tag should win`(
+        wmRuntimeInfo: WireMockRuntimeInfo,
+        @TempDir projectRootDirPath: Path,
+    ) {
+        val wiremockBaseUrl = wmRuntimeInfo.httpBaseUrl
+
+        val buildFileContents =
+            """
+            ${baseBuildFileContents()}
+
+            openTelemetryBuild {
+                endpoint = '$wiremockBaseUrl/otel'
+                exporterMode = com.atkinsondev.opentelemetry.build.OpenTelemetryExporterMode.HTTP
+                customTags = ["gitlab.pipeline.id": "from-custom-tag"]
+            }
+            """.trimIndent()
+
+        File(projectRootDirPath.toFile(), "build.gradle").writeText(buildFileContents)
+
+        createSrcDirectoryAndClassFile(projectRootDirPath)
+        createTestDirectoryAndClassFile(projectRootDirPath)
+
+        stubFor(post("/otel").willReturn(ok()))
+
+        val buildResult =
+            GradleRunner
+                .create()
+                .withProjectDir(projectRootDirPath.toFile())
+                .withArguments("test", "--info", "--stacktrace")
+                .withEnvironment(mapOf("OTEL_RESOURCE_ATTRIBUTES" to "gitlab.pipeline.id=from-env-var"))
+                .withPluginClasspath()
+                .build()
+
+        expectThat(buildResult.task(":test")?.outcome).isEqualTo(TaskOutcome.SUCCESS)
+
+        await().untilAsserted {
+            val otelRequests = findAll(postRequestedFor(urlEqualTo("/otel")))
+            val otelRequestBodies = otelRequests.map { it.bodyAsString }
+
+            expectThat(otelRequests).isNotEmpty()
+            expectThat(otelRequestBodies.find { it.contains("from-custom-tag") }).isNotNull()
+            expectThat(otelRequestBodies.find { it.contains("from-env-var") }).isNull()
+        }
+    }
+
+    @Test
     fun `when test fails should send failure data`(
         wmRuntimeInfo: WireMockRuntimeInfo,
         @TempDir projectRootDirPath: Path,

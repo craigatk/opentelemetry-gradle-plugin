@@ -156,6 +156,25 @@ openTelemetryBuild {
 }
 ```
 
+### Custom resource attributes
+
+You can add custom tags/attributes to every span in the trace with the `customTags` configuration parameter:
+
+```groovy
+openTelemetryBuild {
+    endpoint = "https://<opentelemetry-server-domain>"
+    customTags = ["ci.pipeline.id": "1234"]
+}
+```
+
+The plugin also honors the standard OpenTelemetry [`OTEL_RESOURCE_ATTRIBUTES` environment variable and `otel.resource.attributes` system property](https://opentelemetry.io/docs/specs/otel/resource/sdk/#specifying-resource-information-via-an-environment-variable), so attributes set that way (for example by a CI system) are also added to every span, without any plugin configuration required:
+
+```shell
+OTEL_RESOURCE_ATTRIBUTES="ci.pipeline.id=1234,ci.job.id=5678" ./gradlew build
+```
+
+If a key is set both via `customTags` and via `OTEL_RESOURCE_ATTRIBUTES`/`otel.resource.attributes`, the `customTags` value takes priority.
+
 ### Zipkin Exporter configuration
 
 In addition to the standard gRPC or HTTP OpenTelemetry exporters, the plugin supports exporting to Zipkin.
@@ -301,6 +320,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.7.0
+  * Honor the standard `OTEL_RESOURCE_ATTRIBUTES` environment variable and `otel.resource.attributes` system property for adding custom resource attributes
 * 4.6.2
   * Handle dry-run flag when config cache is enabled
 * 4.6.1
