@@ -48,7 +48,11 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
 
                     val customTags: Map<String, String>? =
                         try {
-                            extension.customTags.orNull ?: mapOf()
+                            val configuredCustomTags = extension.customTags.orNull ?: mapOf()
+
+                            // Explicitly configured tags take priority over the standard OpenTelemetry resource
+                            // attributes environment variable / system property when keys collide.
+                            ResourceAttributesEnv.fromEnvironment(SystemEnvironmentSource()) + configuredCustomTags
                         } catch (e: Exception) {
                             null
                         }
