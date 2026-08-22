@@ -64,13 +64,18 @@ abstract class TraceService : BuildService<TraceService.Params> {
     }
 
     private val openTelemetry: OpenTelemetrySdk by lazy {
-        OpenTelemetryInit().init(
-            endpoint = parameters.getEndpoint().get(),
-            headers = parameters.getHeaders().get(),
-            serviceName = parameters.getServiceName().get(),
-            exporterMode = parameters.getExporterMode().get(),
-            customTags = parameters.getCustomTags().get(),
-        )
+        val openTelemetrySdk =
+            OpenTelemetryInit().init(
+                endpoint = parameters.getEndpoint().get(),
+                headers = parameters.getHeaders().get(),
+                serviceName = parameters.getServiceName().get(),
+                exporterMode = parameters.getExporterMode().get(),
+                customTags = parameters.getCustomTags().get(),
+            )
+
+        GlobalOpenTelemetryRegistrar.register(openTelemetrySdk, logger)
+
+        openTelemetrySdk
     }
 
     private val tracer: Tracer by lazy {
@@ -240,6 +245,8 @@ abstract class TraceService : BuildService<TraceService.Params> {
                 openTelemetry.sdkTracerProvider.shutdown()
             } catch (e: Exception) {
                 logger.warn("Error closing OpenTelemetry provider", e)
+            } finally {
+                GlobalOpenTelemetryRegistrar.unregister(openTelemetry)
             }
         } else {
             logger.info("Build not started, not sending traces")

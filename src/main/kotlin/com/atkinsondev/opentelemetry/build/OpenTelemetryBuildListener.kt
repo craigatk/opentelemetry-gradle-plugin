@@ -38,6 +38,8 @@ class OpenTelemetryBuildListener(
             openTelemetry.sdkTracerProvider.shutdown()
         } catch (e: Exception) {
             logger.warn("Error closing OpenTelemetry provider", e)
+        } finally {
+            GlobalOpenTelemetryRegistrar.unregister(openTelemetry)
         }
     }
 }
