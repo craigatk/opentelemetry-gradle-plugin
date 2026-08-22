@@ -129,7 +129,7 @@ To start using the plugin, first add the plugin to the `plugins` block in your `
 
 ```groovy
 plugins {
-    id 'com.atkinsondev.opentelemetry-build' version "4.6.2"
+    id 'com.atkinsondev.opentelemetry-build' version "4.8.0"
 }
 ```
 
