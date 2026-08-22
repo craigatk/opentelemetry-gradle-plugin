@@ -221,6 +221,28 @@ openTelemetryBuild {
 }
 ```
 
+### Creating your own spans from init scripts and other build code
+
+Starting in plugin version `4.8.0` the plugin registers its OpenTelemetry SDK as the `GlobalOpenTelemetry`
+instance, so build code outside the plugin - such as a Gradle init script - can create its own spans
+that are exported to your OpenTelemetry backend:
+
+```groovy
+def tracer = io.opentelemetry.api.GlobalOpenTelemetry.getTracer("my-init-script")
+
+def span = tracer.spanBuilder("my-custom-span").startSpan()
+// ...
+span.end()
+```
+
+A couple of notes on the global instance:
+
+* If something else has already registered a `GlobalOpenTelemetry` instance - for example the OpenTelemetry
+  Java agent - the plugin leaves that instance in place and uses its own SDK internally.
+* The plugin creates its SDK, and therefore registers the global instance, when it starts tracing the build.
+  When the configuration cache is enabled that happens when the first task completes, so code running before
+  then still receives a no-op tracer.
+
 #### All configuration options
 
 | Parameter                           | Type                        | Default                          | Description                                                                                                                                                                                                                                                                                                                                                                            |
@@ -320,6 +342,8 @@ Then to view the build traces in your local Jaeger instance:
 
 ## Changelog
 
+* 4.8.0
+  * Register the plugin's SDK as the `GlobalOpenTelemetry` instance so build code outside the plugin, such as init scripts, can create spans with a working tracer
 * 4.7.0
   * Honor the standard `OTEL_RESOURCE_ATTRIBUTES` environment variable and `otel.resource.attributes` system property for adding custom resource attributes
 * 4.6.2

@@ -145,6 +145,8 @@ abstract class OpenTelemetryBuildPlugin : Plugin<Project> {
                                     customTags = customTags.orEmpty(),
                                 )
 
+                            GlobalOpenTelemetryRegistrar.register(openTelemetry, project.logger)
+
                             val tracer = openTelemetry.getTracer(serviceName)
 
                             // Put the following attributes on all spans
